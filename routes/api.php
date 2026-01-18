@@ -3,6 +3,12 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\DriversController;
+use App\Http\Controllers\ClientsController;
+use App\Http\Controllers\DestinationController;
+use App\Http\Controllers\FactoriesController;
+use App\Http\Controllers\ShippingLineController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -22,6 +28,13 @@ Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
     Route::post('/users', [AuthController::class, 'createUser']);
     Route::put('/users/{id}', [AuthController::class, 'editUser']);
     Route::delete('/users/{id}', [AuthController::class, 'deleteUser']);
-    
+
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+Route::apiResource('vehicles', VehicleController::class);
+Route::apiResource('drivers', DriversController::class);
+Route::apiResource('clients', ClientsController::class);
+Route::apiResource('factories', FactoriesController::class);
+Route::apiResource('destinations', DestinationController::class);
+Route::apiResource('shipping-lines', ShippingLineController::class);
