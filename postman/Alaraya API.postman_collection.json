@@ -1,0 +1,731 @@
+{
+  "info": {
+    "name": "Alaraya API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login succeeded', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.access_token) {",
+                  "    pm.collectionVariables.set('token', json.access_token);",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": "{{baseUrl}}/api/login"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/logout"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/user"
+          }
+        },
+        {
+          "name": "Users - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/users"
+          }
+        },
+        {
+          "name": "Users - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Test User\",\n  \"user_name\": \"test.user\",\n  \"email\": \"test.user@example.com\",\n  \"password\": \"password123\",\n  \"phone_number\": \"+201000000000\",\n  \"role\": \"data_entry\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/users"
+          }
+        },
+        {
+          "name": "Users - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Test User Updated\",\n  \"role\": \"operations\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Users - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "item": [
+        {
+          "name": "Vehicles - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/vehicles"
+          }
+        },
+        {
+          "name": "Vehicles - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_number\": \"ABC-123\",\n  \"trailer_number\": \"TR-1\",\n  \"badge_number\": \"B-100\",\n  \"notes\": \"Created from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/vehicles"
+          }
+        },
+        {
+          "name": "Vehicles - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}"
+          }
+        },
+        {
+          "name": "Vehicles - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}"
+          }
+        },
+        {
+          "name": "Vehicles - Get By ID (not implemented in controller)",
+          "disabled": true,
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivers",
+      "item": [
+        {
+          "name": "Drivers - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/drivers"
+          }
+        },
+        {
+          "name": "Drivers - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driver_name\": \"Driver 1\",\n  \"phone_number\": \"+201000000001\",\n  \"identification_number\": \"ID-123\",\n  \"license_number\": \"LIC-123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/drivers"
+          }
+        },
+        {
+          "name": "Drivers - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+201000000002\"\n}"
+            },
+            "url": "{{baseUrl}}/api/drivers/{{driverId}}"
+          }
+        },
+        {
+          "name": "Drivers - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/drivers/{{driverId}}"
+          }
+        },
+        {
+          "name": "Drivers - Get By ID (not implemented in controller)",
+          "disabled": true,
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/drivers/{{driverId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "Clients - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients"
+          }
+        },
+        {
+          "name": "Clients - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_name\": \"Client 1\",\n  \"contact_number\": \"+201000000010\",\n  \"notes\": \"Created from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/clients"
+          }
+        },
+        {
+          "name": "Clients - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          }
+        },
+        {
+          "name": "Clients - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          }
+        },
+        {
+          "name": "Clients - Get By ID (not implemented in controller)",
+          "disabled": true,
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Factories",
+      "item": [
+        {
+          "name": "Factories - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/factories"
+          }
+        },
+        {
+          "name": "Factories - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"factory_name\": \"Factory 1\",\n  \"client_id\": {{clientId}},\n  \"location\": \"Cairo\",\n  \"contact_person\": \"Ahmed\",\n  \"contact_number\": \"+201000000020\",\n  \"loading_person\": \"Omar\",\n  \"loading_contact\": \"+201000000021\",\n  \"notes\": \"Created from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/factories"
+          }
+        },
+        {
+          "name": "Factories - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/factories/{{factoryId}}"
+          }
+        },
+        {
+          "name": "Factories - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/factories/{{factoryId}}"
+          }
+        },
+        {
+          "name": "Factories - Get By ID (not implemented in controller)",
+          "disabled": true,
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/factories/{{factoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Destinations",
+      "item": [
+        {
+          "name": "Destinations - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/destinations"
+          }
+        },
+        {
+          "name": "Destinations - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination_name\": \"Alexandria\",\n  \"noloan_code\": \"NL-001\",\n  \"notes\": \"Created from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/destinations"
+          }
+        },
+        {
+          "name": "Destinations - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/destinations/{{destinationId}}"
+          }
+        },
+        {
+          "name": "Destinations - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/destinations/{{destinationId}}"
+          }
+        },
+        {
+          "name": "Destinations - Get By ID (not implemented in controller)",
+          "disabled": true,
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/destinations/{{destinationId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shipping Lines",
+      "item": [
+        {
+          "name": "Shipping Lines - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/shipping-lines"
+          }
+        },
+        {
+          "name": "Shipping Lines - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_line_name\": \"Maersk\",\n  \"contact_info\": \"support@example.com\",\n  \"notes\": \"Created from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/shipping-lines"
+          }
+        },
+        {
+          "name": "Shipping Lines - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/shipping-lines/{{shippingLineId}}"
+          }
+        },
+        {
+          "name": "Shipping Lines - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/shipping-lines/{{shippingLineId}}"
+          }
+        },
+        {
+          "name": "Shipping Lines - Get By ID (not implemented in controller)",
+          "disabled": true,
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/shipping-lines/{{shippingLineId}}"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "key": "vehicleId",
+      "value": "1"
+    },
+    {
+      "key": "driverId",
+      "value": "1"
+    },
+    {
+      "key": "clientId",
+      "value": "1"
+    },
+    {
+      "key": "factoryId",
+      "value": "1"
+    },
+    {
+      "key": "destinationId",
+      "value": "1"
+    },
+    {
+      "key": "shippingLineId",
+      "value": "1"
+    }
+  ]
+}
