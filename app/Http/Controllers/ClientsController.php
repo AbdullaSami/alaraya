@@ -76,7 +76,7 @@ class ClientsController extends Controller
                 200
             );
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update client'], 500);
+            return response()->json(['error' => 'Failed to update client', 'message' => $e->getMessage()], 500);
         }
     }
 
