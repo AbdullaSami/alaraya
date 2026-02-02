@@ -20,6 +20,17 @@ class ClientsController extends Controller
         }
     }
 
+
+    public function show(string $id)
+    {
+        try {
+            $client = Client::with('factories')->findOrFail($id);
+            return response()->json($client, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Client not found'], 404);
+        }
+    }
+
     /**
      * Store a newly created resource in storage.
      */
