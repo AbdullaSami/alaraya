@@ -19,4 +19,9 @@ class Client extends Model
     {
         return $this->hasMany(Factory::class);
     }
+
+    public function shipLineClients()
+    {
+        return $this->hasMany(ShipLineClient::class);
+    }
 }

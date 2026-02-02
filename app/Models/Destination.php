@@ -14,4 +14,9 @@ class Destination extends Model
         'noloan_code',
         'notes',
     ];
+
+    public function shipLineClients()
+    {
+        return $this->hasMany(ShipLineClient::class);
+    }
 }

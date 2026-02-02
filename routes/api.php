@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\FactoriesController;
 use App\Http\Controllers\ShippingLineController;
+use App\Http\Controllers\ShipOrderDataController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -38,3 +39,10 @@ Route::apiResource('clients', ClientsController::class);
 Route::apiResource('factories', FactoriesController::class);
 Route::apiResource('destinations', DestinationController::class);
 Route::apiResource('shipping-lines', ShippingLineController::class);
+
+// Ship order number generation
+Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
+
+// Store ship order data
+Route::post('/ship-order-data', [ShipOrderDataController::class, 'store']);
+

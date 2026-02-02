@@ -22,4 +22,9 @@ class Factory extends Model
     {
         return $this->belongsTo(Client::class);
     }
+
+    public function shipLineClientFactories()
+    {
+        return $this->hasMany(ShipLineClientFactory::class);
+    }
 }

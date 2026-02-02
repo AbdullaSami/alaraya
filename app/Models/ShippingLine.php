@@ -14,4 +14,9 @@ class ShippingLine extends Model
         'contact_info',
         'notes',
     ];
+
+    public function shipLineClients()
+    {
+        return $this->hasMany(ShipLineClient::class);
+    }
 }
