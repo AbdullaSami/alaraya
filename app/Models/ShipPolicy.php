@@ -21,6 +21,6 @@ class ShipPolicy extends Model
 
     public function shipContainersDetails()
     {
-        return $this->hasMany(ShipContainersDetail::class);
+        return $this->hasMany(ShipContainersDetail::class, 'policy_id');
     }
 }

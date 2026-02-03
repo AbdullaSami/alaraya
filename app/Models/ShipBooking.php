@@ -21,11 +21,11 @@ class ShipBooking extends Model
 
     public function clearanceData()
     {
-        return $this->hasOne(ClearanceData::class);
+        return $this->hasOne(ClearanceData::class, 'booking_id');
     }
 
     public function shipContainersDetails()
     {
-        return $this->hasMany(ShipContainersDetail::class);
+        return $this->hasMany(ShipContainersDetail::class, 'booking_id');
     }
 }
