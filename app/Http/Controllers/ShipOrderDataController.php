@@ -42,6 +42,7 @@ class ShipOrderDataController extends Controller
 
     public function store(Request $request)
     {
+        try{
         $validatedData = $request->validate([
             // Ship Order Data
             'order_type' => 'required|in:import,export',
@@ -181,5 +182,8 @@ class ShipOrderDataController extends Controller
                 ])
             ], 201);
         });
+        } catch (\Exception $e){
+            return response()->json(['error' => 'Failed to create ship order data', 'message' => $e->getMessage()], 500);
+        }
     }
 }
