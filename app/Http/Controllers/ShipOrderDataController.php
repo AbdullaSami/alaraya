@@ -16,8 +16,32 @@ use Illuminate\Support\Facades\DB;
 class ShipOrderDataController extends Controller
 {
 
-    /*     * Generate a unique order number in the format ORD-{YEAR}-{SEQUENCE}
-     */
+    /*
+    * Display a listing of the Ship Order Data along with related data.
+    */
+    public function index(Request $request)
+    {
+        $shipOrders = ShipOrderData::with([
+            'shipLineClients.client',
+            'shipLineClients.shippingLine',
+            'shipLineClients.destination',
+            'shipLineClients.shipLineClientFactories.factory',
+            'shipPolicies.shipContainersDetails',
+            'shipBookings.shipContainersDetails',
+            'shipBookings.clearanceData',
+            'shipContactData'
+        ])
+            ->latest()
+            ->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'data' => $shipOrders
+        ]);
+    }
+
+    /*
+    * Generate a unique order number in the format ORD-{YEAR}-{SEQUENCE}
+    */
     public function generateOrderNumber()
     {
         $year = now()->year;
@@ -389,6 +413,66 @@ class ShipOrderDataController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to update ship order data',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified Ship Order Data along with all related data.
+     */
+    public function destroy($id)
+    {
+        try {
+
+            $shipOrderData = ShipOrderData::findOrFail($id);
+
+            DB::transaction(function () use ($shipOrderData) {
+
+                // Delete related policies containers
+                ShipContainersDetail::whereIn(
+                    'policy_id',
+                    ShipPolicy::where('ship_order_data_id', $shipOrderData->id)->pluck('id')
+                )->delete();
+
+                // Delete related booking containers
+                ShipContainersDetail::whereIn(
+                    'booking_id',
+                    ShipBooking::where('ship_order_data_id', $shipOrderData->id)->pluck('id')
+                )->delete();
+
+                // Delete clearance data
+                ClearanceData::whereIn(
+                    'booking_id',
+                    ShipBooking::where('ship_order_data_id', $shipOrderData->id)->pluck('id')
+                )->delete();
+
+                // Delete policies & bookings
+                ShipPolicy::where('ship_order_data_id', $shipOrderData->id)->delete();
+                ShipBooking::where('ship_order_data_id', $shipOrderData->id)->delete();
+
+                // Delete factories
+                ShipLineClientFactory::whereIn(
+                    'ship_line_client_id',
+                    ShipLineClient::where('ship_order_data_id', $shipOrderData->id)->pluck('id')
+                )->delete();
+
+                // Delete ship line client
+                ShipLineClient::where('ship_order_data_id', $shipOrderData->id)->delete();
+
+                // Delete contact data
+                ShipContactData::where('ship_order_data_id', $shipOrderData->id)->delete();
+
+                // Finally delete order
+                $shipOrderData->delete();
+            });
+
+            return response()->json([
+                'message' => 'Ship order deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to delete ship order',
                 'message' => $e->getMessage()
             ], 500);
         }
