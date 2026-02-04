@@ -43,6 +43,6 @@ Route::apiResource('shipping-lines', ShippingLineController::class);
 // Ship order number generation
 Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
 
-// Store ship order data
-Route::post('/ship-order-data', [ShipOrderDataController::class, 'store']);
+// Handel ship order data methods
+Route::apiResource('/ship-order-data', ShipOrderDataController::class);
 
