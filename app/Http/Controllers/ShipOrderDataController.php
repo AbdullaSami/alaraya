@@ -45,6 +45,7 @@ class ShipOrderDataController extends Controller
         try {
             $validatedData = $request->validate([
                 // Ship Order Data
+                'order_number' => 'required|string|unique:ship_order_data,order_number',
                 'order_type' => 'required|in:import,export',
                 'client_requirements' => 'nullable|string',
                 'noloans' => 'nullable|integer',
@@ -62,13 +63,13 @@ class ShipOrderDataController extends Controller
                 'factories.*.factory_id' => 'required|exists:factories,id',
 
                 // Ship Policies (array) - mutually exclusive with bookings
-                'policies' => 'required_without:bookings|array|min:1|prohibited_with:bookings',
+                'policies' => 'required_without:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string|unique:ship_policies,policy_number',
                 'policies.*.containers' => 'required|array|min:1',
                 'policies.*.containers.*.container_number' => 'required|string',
 
                 // Ship Bookings (array) - mutually exclusive with policies
-                'bookings' => 'required_without:policies|array|min:1|prohibited_with:policies',
+                'bookings' => 'required_without:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string|unique:ship_bookings,booking_number',
                 'bookings.*.containers' => 'required|array|min:1',
                 'bookings.*.containers.*.container_number' => 'required|string',
@@ -88,11 +89,11 @@ class ShipOrderDataController extends Controller
 
             return DB::transaction(function () use ($validatedData) {
                 // Generate order number
-                $orderNumber = $this->generateOrderNumber();
+                // $orderNumber = $this->generateOrderNumber();
 
                 // Create Ship Order Data
                 $shipOrderData = ShipOrderData::create([
-                    'order_number' => $orderNumber,
+                    'order_number' => $validatedData['order_number'],
                     'order_type' => $validatedData['order_type'],
                     'client_requirements' => $validatedData['client_requirements'] ?? null,
                     'noloans' => $validatedData['noloans'] ?? 0,
