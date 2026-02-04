@@ -94,14 +94,14 @@ class ShipOrderDataController extends Controller
                 // Ship Policies (array) - mutually exclusive with bookings
                 'policies' => 'required_without:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string|unique:ship_policies,policy_number',
-                'policies.*.containers' => 'required|array|min:1',
-                'policies.*.containers.*.container_number' => 'required|string',
+                'policies.*.containers' => 'sometimes|array|min:1',
+                'policies.*.containers.*.container_number' => 'sometimes|string',
 
                 // Ship Bookings (array) - mutually exclusive with policies
                 'bookings' => 'required_without:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string|unique:ship_bookings,booking_number',
-                'bookings.*.containers' => 'required|array|min:1',
-                'bookings.*.containers.*.container_number' => 'required|string',
+                'bookings.*.containers' => 'sometimes|array|min:1',
+                'bookings.*.containers.*.container_number' => 'sometimes|string',
 
                 // Ship Contact Data
                 'contact_loading_name' => 'required|string',
@@ -271,13 +271,13 @@ class ShipOrderDataController extends Controller
                 // 🔥 mutually exclusive
                 'policies' => 'required_without:bookings|prohibited_with:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string',
-                'policies.*.containers' => 'required|array|min:1',
-                'policies.*.containers.*.container_number' => 'required|string',
+                'policies.*.containers' => 'sometimes|array|min:1',
+                'policies.*.containers.*.container_number' => 'sometimes|string',
 
                 'bookings' => 'required_without:policies|prohibited_with:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string',
-                'bookings.*.containers' => 'required|array|min:1',
-                'bookings.*.containers.*.container_number' => 'required|string',
+                'bookings.*.containers' => 'sometimes|array|min:1',
+                'bookings.*.containers.*.container_number' => 'sometimes|string',
 
                 'contact_loading_name' => 'required|string',
                 'contact_loading_number' => 'required|string',
