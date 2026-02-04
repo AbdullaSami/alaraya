@@ -62,13 +62,13 @@ class ShipOrderDataController extends Controller
                 'factories.*.factory_id' => 'required|exists:factories,id',
 
                 // Ship Policies (array)
-                'policies' => 'required|array|min:1',
+                'policies' => 'required_without:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string|unique:ship_policies,policy_number',
                 'policies.*.containers' => 'required|array|min:1',
                 'policies.*.containers.*.container_number' => 'required|string|unique:ship_containers_details,container_number',
 
                 // Ship Bookings (array)
-                'bookings' => 'required|array|min:1',
+                'bookings' => 'required_without:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string|unique:ship_bookings,booking_number',
                 'bookings.*.containers' => 'required|array|min:1',
                 'bookings.*.containers.*.container_number' => 'required|string|unique:ship_containers_details,container_number',
