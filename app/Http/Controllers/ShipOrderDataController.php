@@ -61,14 +61,14 @@ class ShipOrderDataController extends Controller
                 'factories' => 'required|array|min:1',
                 'factories.*.factory_id' => 'required|exists:factories,id',
 
-                // Ship Policies (array)
-                'policies' => 'required_without:bookings|array|min:1',
+                // Ship Policies (array) - mutually exclusive with bookings
+                'policies' => 'required_without:bookings|array|min:1|prohibited_with:bookings',
                 'policies.*.policy_number' => 'required|string|unique:ship_policies,policy_number',
                 'policies.*.containers' => 'required|array|min:1',
                 'policies.*.containers.*.container_number' => 'required|string',
 
-                // Ship Bookings (array)
-                'bookings' => 'required_without:policies|array|min:1',
+                // Ship Bookings (array) - mutually exclusive with policies
+                'bookings' => 'required_without:policies|array|min:1|prohibited_with:policies',
                 'bookings.*.booking_number' => 'required|string|unique:ship_bookings,booking_number',
                 'bookings.*.containers' => 'required|array|min:1',
                 'bookings.*.containers.*.container_number' => 'required|string',
@@ -117,45 +117,49 @@ class ShipOrderDataController extends Controller
                     ]);
                 }
 
-                // Create Ship Policies and their containers
-                foreach ($validatedData['policies'] as $policyData) {
-                    $policy = ShipPolicy::create([
-                        'ship_order_data_id' => $shipOrderData->id,
-                        'policy_number' => $policyData['policy_number'],
-                    ]);
-
-                    // Create containers for this policy
-                    foreach ($policyData['containers'] as $containerData) {
-                        ShipContainersDetail::create([
-                            'policy_id' => $policy->id,
-                            'container_number' => $containerData['container_number'],
+                // Create Ship Policies and their containers (if provided)
+                if (isset($validatedData['policies'])) {
+                    foreach ($validatedData['policies'] as $policyData) {
+                        $policy = ShipPolicy::create([
+                            'ship_order_data_id' => $shipOrderData->id,
+                            'policy_number' => $policyData['policy_number'],
                         ]);
+
+                        // Create containers for this policy
+                        foreach ($policyData['containers'] as $containerData) {
+                            ShipContainersDetail::create([
+                                'policy_id' => $policy->id,
+                                'container_number' => $containerData['container_number'],
+                            ]);
+                        }
                     }
                 }
 
-                // Create Ship Bookings and their containers
-                foreach ($validatedData['bookings'] as $bookingData) {
-                    $booking = ShipBooking::create([
-                        'ship_order_data_id' => $shipOrderData->id,
-                        'booking_number' => $bookingData['booking_number'],
-                    ]);
-
-                    // Create containers for this booking
-                    foreach ($bookingData['containers'] as $containerData) {
-                        ShipContainersDetail::create([
-                            'booking_id' => $booking->id,
-                            'container_number' => $containerData['container_number'],
+                // Create Ship Bookings and their containers (if provided)
+                if (isset($validatedData['bookings'])) {
+                    foreach ($validatedData['bookings'] as $bookingData) {
+                        $booking = ShipBooking::create([
+                            'ship_order_data_id' => $shipOrderData->id,
+                            'booking_number' => $bookingData['booking_number'],
                         ]);
-                    }
 
-                    // Create Clearance Data if provided
-                    if (!empty($validatedData['clearance_data'])) {
-                        ClearanceData::create([
-                            'booking_id' => $booking->id,
-                            'clearance_type' => $validatedData['clearance_data']['clearance_type'] ?? null,
-                            'customs_location' => $validatedData['clearance_data']['customs_location'] ?? null,
-                            'redirect_location' => $validatedData['clearance_data']['redirect_location'] ?? null,
-                        ]);
+                        // Create containers for this booking
+                        foreach ($bookingData['containers'] as $containerData) {
+                            ShipContainersDetail::create([
+                                'booking_id' => $booking->id,
+                                'container_number' => $containerData['container_number'],
+                            ]);
+                        }
+
+                        // Create Clearance Data if provided
+                        if (!empty($validatedData['clearance_data'])) {
+                            ClearanceData::create([
+                                'booking_id' => $booking->id,
+                                'clearance_type' => $validatedData['clearance_data']['clearance_type'] ?? null,
+                                'customs_location' => $validatedData['clearance_data']['customs_location'] ?? null,
+                                'redirect_location' => $validatedData['clearance_data']['redirect_location'] ?? null,
+                            ]);
+                        }
                     }
                 }
 
