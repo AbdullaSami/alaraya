@@ -20,6 +20,10 @@ return new class extends Migration
             $table->date('shipping_date')->nullable();
             $table->date('aging_date')->nullable();
             $table->text('notes')->nullable();
+            $table->string('containers_type')->nullable();
+            $table->string('containers_number')->nullable();
+            $table->string('loading_way')->nullable();
+            $table->unsignedBigInteger('transfers_count')->default(1);
             $table->timestamps();
         });
     }

@@ -10,6 +10,7 @@ use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\FactoriesController;
 use App\Http\Controllers\ShippingLineController;
 use App\Http\Controllers\ShipOrderDataController;
+use App\Http\Controllers\OperatingOrderController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -45,4 +46,7 @@ Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrder
 
 // Handel ship order data methods
 Route::apiResource('/ship-order-data', ShipOrderDataController::class);
+
+// Handel Operating orders data methods
+Route::apiResource('/operating-orders', OperatingOrderController::class);
 

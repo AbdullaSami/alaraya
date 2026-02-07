@@ -15,4 +15,9 @@ class Drivers extends Model
         'identification_number',
         'license_number',
     ];
+
+    public function operatingOrderDriver()
+    {
+        return $this->hasMany(OperatingOrderDriver::class);
+    }
 }

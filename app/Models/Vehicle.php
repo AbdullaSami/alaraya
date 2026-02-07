@@ -15,4 +15,9 @@ class Vehicle extends Model
         'badge_number',
         'notes',
     ];
+
+    public function operatingOrderVehicles()
+    {
+        return $this->hasMany(OperatingOrderVehicle::class);
+    }
 }

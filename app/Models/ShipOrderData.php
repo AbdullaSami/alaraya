@@ -17,8 +17,16 @@ class ShipOrderData extends Model
         'shipping_date',
         'aging_date',
         'notes',
+        'containers_type',
+        'containers_number',
+        'loading_way',
+        'transfers_count',
     ];
 
+    public function operatingOrder()
+    {
+        return $this->hasOne(OperatingOrder::class);
+    }
     public function shipLineClients()
     {
         return $this->hasMany(ShipLineClient::class);

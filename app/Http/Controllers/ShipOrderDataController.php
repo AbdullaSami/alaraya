@@ -81,6 +81,10 @@ class ShipOrderDataController extends Controller
                 'shipping_date' => 'nullable|date',
                 'aging_date' => 'nullable|date',
                 'notes' => 'nullable|string',
+                'containers_type' => 'nullable|string',
+                'containers_number' => 'nullable|string',
+                'loading_way' => 'nullable|string',
+                'transfers_count' => 'nullable|integer',
 
                 // Ship Line Client Data
                 'client_id' => 'required|exists:clients,id',
@@ -129,6 +133,10 @@ class ShipOrderDataController extends Controller
                     'shipping_date' => $validatedData['shipping_date'] ?? null,
                     'aging_date' => $validatedData['aging_date'] ?? null,
                     'notes' => $validatedData['notes'] ?? null,
+                    'containers_type' => $validatedData['containers_type'] ?? null,
+                    'containers_number' => $validatedData['containers_number'] ?? null,
+                    'loading_way' => $validatedData['loading_way'] ?? null,
+                    'transfers_count' => $validatedData['transfers_count'] ?? 1,
                 ]);
 
                 // Create Ship Line Client
