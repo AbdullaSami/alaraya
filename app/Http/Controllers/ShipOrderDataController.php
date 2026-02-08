@@ -98,13 +98,13 @@ class ShipOrderDataController extends Controller
                 // Ship Policies (array) - mutually exclusive with bookings
                 'policies' => 'required_without:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string|unique:ship_policies,policy_number',
-                'policies.*.containers' => 'sometimes|array|min:1',
+                'policies.*.containers' => 'sometimes|array',
                 'policies.*.containers.*.container_number' => 'sometimes|string',
 
                 // Ship Bookings (array) - mutually exclusive with policies
                 'bookings' => 'required_without:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string|unique:ship_bookings,booking_number',
-                'bookings.*.containers' => 'sometimes|array|min:1',
+                'bookings.*.containers' => 'sometimes|array',
                 'bookings.*.containers.*.container_number' => 'sometimes|string',
 
                 // Ship Contact Data
