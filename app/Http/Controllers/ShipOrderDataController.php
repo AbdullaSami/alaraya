@@ -277,12 +277,12 @@ class ShipOrderDataController extends Controller
                 'factories.*.factory_id' => 'required|exists:factories,id',
 
                 // 🔥 mutually exclusive
-                'policies' => 'required_without:bookings|prohibited_with:bookings|array|min:1',
+                'policies' => 'required_without:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string',
                 'policies.*.containers' => 'sometimes|array|min:1',
                 'policies.*.containers.*.container_number' => 'sometimes|string',
 
-                'bookings' => 'required_without:policies|prohibited_with:policies|array|min:1',
+                'bookings' => 'required_without:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string',
                 'bookings.*.containers' => 'sometimes|array|min:1',
                 'bookings.*.containers.*.container_number' => 'sometimes|string',
