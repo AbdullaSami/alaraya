@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('policy_id')->nullable()->constrained('ship_policies')->onDelete('cascade');
             $table->foreignId('booking_id')->nullable()->constrained('ship_bookings')->onDelete('cascade');
-            $table->string('container_number');
+            $table->string('container_number')->nullable();
             $table->timestamps();
         });
     }
