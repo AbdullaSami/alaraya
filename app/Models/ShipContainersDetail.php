@@ -24,4 +24,9 @@ class ShipContainersDetail extends Model
     {
         return $this->belongsTo(ShipBooking::class, 'booking_id');
     }
+
+    public function torrentContainers()
+    {
+        return $this->hasMany(TorrentContainer::class, 'container_id');
+    }
 }

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\OperatingOrder;
+use App\Models\OperatingOrderVehicle;
+use App\Models\OperatingOrderDriver;
+use App\Models\TorrentContainer;
+use Illuminate\Support\Facades\DB;
 
 class OperatingOrderController extends Controller
 {
@@ -16,6 +20,7 @@ class OperatingOrderController extends Controller
             'shipOrderData',
             'drivers.driver',
             'vehicles.vehicle',
+            'torrentContainers.container',
         ])->latest()->get();
 
         return response()->json($orders);
@@ -39,44 +44,99 @@ class OperatingOrderController extends Controller
                 // Operating Order Data
                 'ship_order_data_id' => 'required|exists:ship_order_data,id',
                 'is_operating_order' => 'required|boolean',
-                'requirement_notes' => 'nullable|string',
+                'cause_note' => 'nullable|string',
+                'operating_order_image' => 'nullable|string',
+                'operating_order_location' => 'nullable|string',
+                'operating_order_mail_image' => 'nullable|string',
+
+                // Torrents Data
+                'is_torrents' => 'nullable|boolean',
+                'torrents_cause_note' => 'nullable|string',
+                'torrents_image' => 'nullable|string',
+                'pull_torrents_date' => 'nullable|date',
+                'load_torrents_date' => 'nullable|date',
+
+                // Release and Assignment Data
+                'release_and_assignment_image' => 'nullable|string',
+                'release_and_assignment_requirements' => 'nullable|string',
+
                 // Vehicles and Drivers Data
                 'driver_ids' => 'nullable|array',
                 'driver_ids.*' => 'exists:drivers,id',
                 'vehicle_ids' => 'nullable|array',
                 'vehicle_ids.*' => 'exists:vehicles,id',
+
+                // Torrent Containers Data
+                'torrent_containers' => 'nullable|array',
+                'torrent_containers.*.container_id' => 'required|exists:ship_containers_details,id',
+                'torrent_containers.*.torrent_number' => 'required|string',
             ]);
-            // Create Operating Order
-            $operatingOrder = OperatingOrder::create([
-                'ship_order_data_id' => $validatedData['ship_order_data_id'],
-                'is_operating_order' => $validatedData['is_operating_order'],
-                'requirement_notes' => $validatedData['requirement_notes'] ?? null,
-            ]);
+
+            return DB::transaction(function () use ($validatedData) {
+                // Create Operating Order
+                $operatingOrder = OperatingOrder::create([
+                    'ship_order_data_id' => $validatedData['ship_order_data_id'],
+                    'is_operating_order' => $validatedData['is_operating_order'],
+                    'cause_note' => $validatedData['cause_note'] ?? null,
+                    'operating_order_image' => $validatedData['operating_order_image'] ?? null,
+                    'operating_order_location' => $validatedData['operating_order_location'] ?? null,
+                    'operating_order_mail_image' => $validatedData['operating_order_mail_image'] ?? null,
+                    'is_torrents' => $validatedData['is_torrents'] ?? false,
+                    'torrents_cause_note' => $validatedData['torrents_cause_note'] ?? null,
+                    'torrents_image' => $validatedData['torrents_image'] ?? null,
+                    'pull_torrents_date' => $validatedData['pull_torrents_date'] ?? null,
+                    'load_torrents_date' => $validatedData['load_torrents_date'] ?? null,
+                    'release_and_assignment_image' => $validatedData['release_and_assignment_image'] ?? null,
+                    'release_and_assignment_requirements' => $validatedData['release_and_assignment_requirements'] ?? null,
+                ]);
 
 
-            if ((count($validatedData['driver_ids']) <= $operatingOrder->shipOrderData()->transfers_count)
-                ||
-                (count($validatedData['vehicle_ids']) <= $operatingOrder->shipOrderData()->transfers_count)
-            ) {
-                return response()->json(['error' => 'At least one driver or vehicle must be assigned to the operating order.'], 422);
-            }
-
-            // Attach Vehicles and Drivers
-            if (!empty($validatedData['driver_ids'])) {
-                foreach ($validatedData['driver_ids'] as $driverId) {
-                    $operatingOrder->drivers()->create(['driver_id' => $driverId]);
+                // Attach Drivers
+                if (isset($validatedData['driver_ids'])) {
+                    foreach ($validatedData['driver_ids'] as $driverId) {
+                        OperatingOrderDriver::create([
+                            'operating_order_id' => $operatingOrder->id,
+                            'driver_id' => $driverId,
+                        ]);
+                    }
                 }
-            }
 
-            if (!empty($validatedData['vehicle_ids'])) {
-                foreach ($validatedData['vehicle_ids'] as $vehicleId) {
-                    $operatingOrder->vehicles()->create(['vehicle_id' => $vehicleId]);
+                // Attach Vehicles
+                if (isset($validatedData['vehicle_ids'])) {
+                    foreach ($validatedData['vehicle_ids'] as $vehicleId) {
+                        OperatingOrderVehicle::create([
+                            'operating_order_id' => $operatingOrder->id,
+                            'vehicle_id' => $vehicleId,
+                        ]);
+                    }
                 }
-            }
 
-            return response()->json($operatingOrder, 201);
+                // Create Torrent Containers
+                if (isset($validatedData['torrent_containers'])) {
+                    foreach ($validatedData['torrent_containers'] as $torrentContainer) {
+                        TorrentContainer::create([
+                            'operating_order_id' => $operatingOrder->id,
+                            'container_id' => $torrentContainer['container_id'],
+                            'torrent_number' => $torrentContainer['torrent_number'],
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Operating order created successfully',
+                    'data' => $operatingOrder->load([
+                        'shipOrderData',
+                        'drivers.driver',
+                        'vehicles.vehicle',
+                        'torrentContainers.container',
+                    ])
+                ], 201);
+            });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create operating order', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Failed to create operating order',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -89,6 +149,7 @@ class OperatingOrderController extends Controller
             'shipOrderData',
             'drivers.driver',
             'vehicles.vehicle',
+            'torrentContainers.container',
         ])->findOrFail($operating_order);
 
         return response()->json($order);
@@ -112,53 +173,98 @@ class OperatingOrderController extends Controller
             $order = OperatingOrder::findOrFail($operating_order);
 
             $validatedData = $request->validate([
+                // Operating Order Data
                 'is_operating_order' => 'sometimes|boolean',
-                'requirement_notes' => 'nullable|string',
+                'cause_note' => 'nullable|string',
+                'operating_order_image' => 'nullable|string',
+                'operating_order_location' => 'nullable|string',
+                'operating_order_mail_image' => 'nullable|string',
 
-                'driver_ids' => 'nullable|array',
+                // Torrents Data
+                'is_torrents' => 'sometimes|boolean',
+                'torrents_cause_note' => 'nullable|string',
+                'torrents_image' => 'nullable|string',
+                'pull_torrents_date' => 'nullable|date',
+                'load_torrents_date' => 'nullable|date',
+
+                // Release and Assignment Data
+                'release_and_assignment_image' => 'nullable|string',
+                'release_and_assignment_requirements' => 'nullable|string',
+
+                // Vehicles and Drivers Data
+                'driver_ids' => 'sometimes|array',
                 'driver_ids.*' => 'exists:drivers,id',
 
                 'vehicle_ids' => 'nullable|array',
                 'vehicle_ids.*' => 'exists:vehicles,id',
+
+                // Torrent Containers Data
+                'torrent_containers' => 'sometimes|array',
+                'torrent_containers.*.container_id' => 'required|exists:ship_containers_details,id',
+                'torrent_containers.*.torrent_number' => 'required|string',
             ]);
 
-            $order->update([
-                'is_operating_order' => $validatedData['is_operating_order'] ?? $order->is_operating_order,
-                'requirement_notes' => $validatedData['requirement_notes'] ?? $order->requirement_notes,
-            ]);
+            return DB::transaction(function () use ($order, $validatedData) {
+                // Update Operating Order
+                $order->update([
+                    'is_operating_order' => $validatedData['is_operating_order'] ?? $order->is_operating_order,
+                    'cause_note' => $validatedData['cause_note'] ?? $order->cause_note,
+                    'operating_order_image' => $validatedData['operating_order_image'] ?? $order->operating_order_image,
+                    'operating_order_location' => $validatedData['operating_order_location'] ?? $order->operating_order_location,
+                    'operating_order_mail_image' => $validatedData['operating_order_mail_image'] ?? $order->operating_order_mail_image,
+                    'is_torrents' => $validatedData['is_torrents'] ?? $order->is_torrents,
+                    'torrents_cause_note' => $validatedData['torrents_cause_note'] ?? $order->torrents_cause_note,
+                    'torrents_image' => $validatedData['torrents_image'] ?? $order->torrents_image,
+                    'pull_torrents_date' => $validatedData['pull_torrents_date'] ?? $order->pull_torrents_date,
+                    'load_torrents_date' => $validatedData['load_torrents_date'] ?? $order->load_torrents_date,
+                    'release_and_assignment_image' => $validatedData['release_and_assignment_image'] ?? $order->release_and_assignment_image,
+                    'release_and_assignment_requirements' => $validatedData['release_and_assignment_requirements'] ?? $order->release_and_assignment_requirements,
+                ]);
 
-            $transfersCount = $order->shipOrderData->transfers_count;
+                // Sync Drivers if provided
+                if (isset($validatedData['driver_ids'])) {
+                    $order->drivers()->delete();
+                    foreach ($validatedData['driver_ids'] as $driverId) {
+                        OperatingOrderDriver::create([
+                            'operating_order_id' => $order->id,
+                            'driver_id' => $driverId,
+                        ]);
+                    }
+                }
 
-            if (
-                (isset($validatedData['driver_ids']) && count($validatedData['driver_ids']) < $transfersCount) ||
-                (isset($validatedData['vehicle_ids']) && count($validatedData['vehicle_ids']) < $transfersCount)
-            ) {
+                // Sync Vehicles if provided
+                if (isset($validatedData['vehicle_ids'])) {
+                    $order->vehicles()->delete();
+                    foreach ($validatedData['vehicle_ids'] as $vehicleId) {
+                        OperatingOrderVehicle::create([
+                            'operating_order_id' => $order->id,
+                            'vehicle_id' => $vehicleId,
+                        ]);
+                    }
+                }
+
+                // Sync Torrent Containers if provided
+                if (isset($validatedData['torrent_containers'])) {
+                    $order->torrentContainers()->delete();
+                    foreach ($validatedData['torrent_containers'] as $torrentContainer) {
+                        TorrentContainer::create([
+                            'operating_order_id' => $order->id,
+                            'container_id' => $torrentContainer['container_id'],
+                            'torrent_number' => $torrentContainer['torrent_number'],
+                        ]);
+                    }
+                }
+
                 return response()->json([
-                    'error' => 'Drivers and vehicles count must match transfers count'
-                ], 422);
-            }
-
-            // Sync Drivers
-            if (isset($validatedData['driver_ids'])) {
-                $order->drivers()->delete();
-                foreach ($validatedData['driver_ids'] as $driverId) {
-                    $order->drivers()->create(['driver_id' => $driverId]);
-                }
-            }
-
-            // Sync Vehicles
-            if (isset($validatedData['vehicle_ids'])) {
-                $order->vehicles()->delete();
-                foreach ($validatedData['vehicle_ids'] as $vehicleId) {
-                    $order->vehicles()->create(['vehicle_id' => $vehicleId]);
-                }
-            }
-
-            return response()->json($order->load([
-                'shipOrderData',
-                'drivers.driver',
-                'vehicles.vehicle',
-            ]));
+                    'message' => 'Operating order updated successfully',
+                    'data' => $order->load([
+                        'shipOrderData',
+                        'drivers.driver',
+                        'vehicles.vehicle',
+                        'torrentContainers.container',
+                    ])
+                ]);
+            });
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to update operating order',
@@ -173,14 +279,24 @@ class OperatingOrderController extends Controller
      */
     public function destroy($operating_order)
     {
-        $order = OperatingOrder::findOrFail($operating_order);
+        try {
+            $order = OperatingOrder::findOrFail($operating_order);
 
-        $order->drivers()->delete();
-        $order->vehicles()->delete();
-        $order->delete();
+            DB::transaction(function () use ($order) {
+                $order->drivers()->delete();
+                $order->vehicles()->delete();
+                $order->torrentContainers()->delete();
+                $order->delete();
+            });
 
-        return response()->json([
-            'message' => 'Operating order deleted successfully'
-        ]);
+            return response()->json([
+                'message' => 'Operating order deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to delete operating order',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
