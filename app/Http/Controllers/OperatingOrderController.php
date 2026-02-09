@@ -8,6 +8,8 @@ use App\Models\OperatingOrderVehicle;
 use App\Models\OperatingOrderDriver;
 use App\Models\TorrentContainer;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class OperatingOrderController extends Controller
 {
@@ -72,6 +74,26 @@ class OperatingOrderController extends Controller
                 'torrent_containers.*.torrent_number' => 'required|string',
             ]);
 
+            // Operating Order Image
+            if($request->hasFile('operating_order_image')) {
+                $image = $request->file('operating_order_image')->store('operating_order_images', 'public');
+                $validatedData['operating_order_image'] = URL::to(Storage::url($image));
+            }
+            // operating_order_mail_image
+            if($request->hasFile('operating_order_mail_image')) {
+                $image = $request->file('operating_order_mail_image')->store('operating_order_mail_images', 'public');
+                $validatedData['operating_order_mail_image'] = URL::to(Storage::url($image));
+            }
+            // torrents_image
+            if($request->hasFile('torrents_image')) {
+                $image = $request->file('torrents_image')->store('torrents_images', 'public');
+                $validatedData['torrents_image'] = URL::to(Storage::url($image));
+            }
+            // release_and_assignment_image
+            if($request->hasFile('release_and_assignment_image')) {
+                $image = $request->file('release_and_assignment_image')->store('release_and_assignment_images', 'public');
+                $validatedData['release_and_assignment_image'] = URL::to(Storage::url($image));
+            }
             return DB::transaction(function () use ($validatedData) {
                 // Create Operating Order
                 $operatingOrder = OperatingOrder::create([
@@ -207,6 +229,27 @@ class OperatingOrderController extends Controller
                 'torrent_containers.*.container_id' => 'required|exists:ship_containers_details,id',
                 'torrent_containers.*.torrent_number' => 'required|string',
             ]);
+
+            // Operating Order Image
+            if($request->hasFile('operating_order_image')) {
+                $image = $request->file('operating_order_image')->store('operating_order_images', 'public');
+                $validatedData['operating_order_image'] = URL::to(Storage::url($image));
+            }
+            // operating_order_mail_image
+            if($request->hasFile('operating_order_mail_image')) {
+                $image = $request->file('operating_order_mail_image')->store('operating_order_mail_images', 'public');
+                $validatedData['operating_order_mail_image'] = URL::to(Storage::url($image));
+            }
+            // torrents_image
+            if($request->hasFile('torrents_image')) {
+                $image = $request->file('torrents_image')->store('torrents_images', 'public');
+                $validatedData['torrents_image'] = URL::to(Storage::url($image));
+            }
+            // release_and_assignment_image
+            if($request->hasFile('release_and_assignment_image')) {
+                $image = $request->file('release_and_assignment_image')->store('release_and_assignment_images', 'public');
+                $validatedData['release_and_assignment_image'] = URL::to(Storage::url($image));
+            }
 
             return DB::transaction(function () use ($order, $validatedData) {
                 // Update Operating Order
