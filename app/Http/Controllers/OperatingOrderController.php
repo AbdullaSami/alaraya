@@ -47,19 +47,19 @@ class OperatingOrderController extends Controller
                 'ship_order_data_id' => 'required|exists:ship_order_data,id',
                 'is_operating_order' => 'required|boolean',
                 'cause_note' => 'nullable|string',
-                'operating_order_image' => 'nullable|string',
+                'operating_order_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'operating_order_location' => 'nullable|string',
-                'operating_order_mail_image' => 'nullable|string',
+                'operating_order_mail_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
 
                 // Torrents Data
                 'is_torrents' => 'nullable|boolean',
                 'torrents_cause_note' => 'nullable|string',
-                'torrents_image' => 'nullable|string',
+                'torrents_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'pull_torrents_date' => 'nullable|date',
                 'load_torrents_date' => 'nullable|date',
 
                 // Release and Assignment Data
-                'release_and_assignment_image' => 'nullable|string',
+                'release_and_assignment_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'release_and_assignment_requirements' => 'nullable|string',
 
                 // Vehicles and Drivers Data
@@ -202,19 +202,19 @@ class OperatingOrderController extends Controller
                 // Operating Order Data
                 'is_operating_order' => 'sometimes|boolean',
                 'cause_note' => 'nullable|string',
-                'operating_order_image' => 'nullable|string',
+                'operating_order_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'operating_order_location' => 'nullable|string',
-                'operating_order_mail_image' => 'nullable|string',
+                'operating_order_mail_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
 
                 // Torrents Data
                 'is_torrents' => 'sometimes|boolean',
                 'torrents_cause_note' => 'nullable|string',
-                'torrents_image' => 'nullable|string',
+                'torrents_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'pull_torrents_date' => 'nullable|date',
                 'load_torrents_date' => 'nullable|date',
 
                 // Release and Assignment Data
-                'release_and_assignment_image' => 'nullable|string',
+                'release_and_assignment_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'release_and_assignment_requirements' => 'nullable|string',
 
                 // Vehicles and Drivers Data
