@@ -147,6 +147,10 @@ class OperatingOrderController extends Controller
     {
         $order = OperatingOrder::with([
             'shipOrderData',
+            'shipOrderData.shipLineClients',
+            'shipOrderData.shipPolicies',
+            'shipOrderData.shipBookings',
+            'shipOrderData.shipContactData',
             'drivers.driver',
             'vehicles.vehicle',
             'torrentContainers.container',
