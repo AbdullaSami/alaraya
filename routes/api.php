@@ -11,6 +11,7 @@ use App\Http\Controllers\FactoriesController;
 use App\Http\Controllers\ShippingLineController;
 use App\Http\Controllers\ShipOrderDataController;
 use App\Http\Controllers\OperatingOrderController;
+use App\Http\Controllers\PolicyController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -49,4 +50,13 @@ Route::apiResource('/ship-order-data', ShipOrderDataController::class);
 
 // Handel Operating orders data methods
 Route::apiResource('/operating-orders', OperatingOrderController::class);
+
+// Handel policies data methods
+Route::apiResource('/policies', PolicyController::class);
+
+// Policy number generation
+Route::get('/policy-number', [PolicyController::class, 'generatePolicyNumber']);
+
+// Get policies by ship order data
+Route::get('/ship-order-data/{shipOrderDataId}/policies', [PolicyController::class, 'getByShipOrderData']);
 
