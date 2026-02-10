@@ -46,4 +46,18 @@ class ShipOrderData extends Model
     {
         return $this->hasOne(ShipContactData::class);
     }
+
+       public function policies()
+    {
+        return $this->hasMany(Policy::class);
+    }
+    public function canCreateMorePolicies()
+    {
+        return $this->policies()->count() < $this->transfers_count;
+    }
+
+    public function remainingPolicySlots()
+    {
+        return max(0, $this->transfers_count - $this->policies()->count());
+    }
 }
