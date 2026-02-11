@@ -34,7 +34,8 @@ class PolicyController extends Controller
             'vehicle_driver_assignments' => 'required|array|min:1',
             'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
             'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
-            'vehicle_driver_assignments.*.ship_container_id' => 'required|exists:ship_containers_details,id',
+            'vehicle_driver_assignments.*.ship_container_ids' => 'required|array|min:1',
+            'vehicle_driver_assignments.*.ship_container_ids.*' => 'required|exists:ship_containers_details,id',
         ]);
 
         $shipOrderData = ShipOrderData::findOrFail($validated['ship_order_data_id']);
@@ -58,27 +59,30 @@ class PolicyController extends Controller
 
         $policy = Policy::create($policyData);
 
-        // Create vehicle driver assignments
+        // Create vehicle driver assignments with multiple containers
         $assignments = [];
         foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
             $assignment = VehicleDriverAssignment::create([
                 'vehicle_id' => $assignmentData['vehicle_id'],
                 'driver_id' => $assignmentData['driver_id'],
-                'ship_container_id' => $assignmentData['ship_container_id'],
                 'policy_id' => $policy->id,
             ]);
-            $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainer']);
+
+            // Attach multiple ship containers to the assignment
+            $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+
+            $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
         }
 
         return response()->json([
-            'message' => 'Policy created successfully with vehicle assignments',
-            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainer'])
+            'message' => 'Policy created successfully with vehicle assignments and containers',
+            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
         ], 201);
     }
 
     public function show(string $id)
     {
-        $policy = Policy::with(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainer'])
+        $policy = Policy::with(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
             ->findOrFail($id);
 
         return response()->json($policy);
@@ -104,7 +108,8 @@ class PolicyController extends Controller
             'vehicle_driver_assignments' => 'sometimes|array|min:1',
             'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
             'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
-            'vehicle_driver_assignments.*.ship_container_id' => 'required|exists:ship_containers_details,id',
+            'vehicle_driver_assignments.*.ship_container_ids' => 'required|array|min:1',
+            'vehicle_driver_assignments.*.ship_container_ids.*' => 'required|exists:ship_containers_details,id',
         ]);
 
         if (isset($validated['ship_order_data_id'])) {
@@ -135,25 +140,28 @@ class PolicyController extends Controller
 
         // Update vehicle driver assignments if provided
         if (isset($validated['vehicle_driver_assignments'])) {
-            // Delete existing assignments
+            // Delete existing assignments (this will also delete pivot records due to cascade)
             $policy->vehicleDriverAssignments()->delete();
 
-            // Create new assignments
+            // Create new assignments with multiple containers
             $assignments = [];
             foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
                 $assignment = VehicleDriverAssignment::create([
                     'vehicle_id' => $assignmentData['vehicle_id'],
                     'driver_id' => $assignmentData['driver_id'],
-                    'ship_container_id' => $assignmentData['ship_container_id'],
                     'policy_id' => $policy->id,
                 ]);
-                $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainer']);
+
+                // Attach multiple ship containers to the assignment
+                $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+
+                $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
             }
         }
 
         return response()->json([
             'message' => 'Policy updated successfully',
-            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainer'])
+            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
         ]);
     }
 
@@ -183,7 +191,7 @@ class PolicyController extends Controller
     public function getByShipOrderData($shipOrderDataId)
     {
         $shipOrderData = ShipOrderData::with(['policies' => function($query) {
-            $query->with(['operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainer']);
+            $query->with(['operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers']);
         }])->findOrFail($shipOrderDataId);
 
         return response()->json([
@@ -199,7 +207,8 @@ class PolicyController extends Controller
         $validated = $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
             'driver_id' => 'required|exists:drivers,id',
-            'ship_container_id' => 'required|exists:ship_containers_details,id',
+            'ship_container_ids' => 'required|array|min:1',
+            'ship_container_ids.*' => 'required|exists:ship_containers_details,id',
         ]);
 
         $policy = Policy::findOrFail($policyId);
@@ -207,13 +216,15 @@ class PolicyController extends Controller
         $assignment = VehicleDriverAssignment::create([
             'vehicle_id' => $validated['vehicle_id'],
             'driver_id' => $validated['driver_id'],
-            'ship_container_id' => $validated['ship_container_id'],
             'policy_id' => $policy->id,
         ]);
 
+        // Attach multiple ship containers to the assignment
+        $assignment->syncShipContainers($validated['ship_container_ids']);
+
         return response()->json([
-            'message' => 'Vehicle assignment added successfully',
-            'assignment' => $assignment->load(['vehicle', 'driver', 'shipContainer'])
+            'message' => 'Vehicle assignment added successfully with containers',
+            'assignment' => $assignment->load(['vehicle', 'driver', 'shipContainers'])
         ], 201);
     }
 
@@ -232,15 +243,59 @@ class PolicyController extends Controller
         $validated = $request->validate([
             'vehicle_id' => 'sometimes|required|exists:vehicles,id',
             'driver_id' => 'sometimes|required|exists:drivers,id',
-            'ship_container_id' => 'sometimes|required|exists:ship_containers_details,id',
+            'ship_container_ids' => 'sometimes|required|array|min:1',
+            'ship_container_ids.*' => 'required|exists:ship_containers_details,id',
         ]);
 
         $assignment = VehicleDriverAssignment::findOrFail($assignmentId);
-        $assignment->update($validated);
+
+        // Update assignment basic fields
+        $assignmentData = $request->only(['vehicle_id', 'driver_id']);
+        if (!empty($assignmentData)) {
+            $assignment->update($assignmentData);
+        }
+
+        // Update ship containers if provided
+        if (isset($validated['ship_container_ids'])) {
+            $assignment->syncShipContainers($validated['ship_container_ids']);
+        }
 
         return response()->json([
             'message' => 'Vehicle assignment updated successfully',
-            'assignment' => $assignment->load(['vehicle', 'driver', 'shipContainer'])
+            'assignment' => $assignment->load(['vehicle', 'driver', 'shipContainers'])
+        ]);
+    }
+
+    // New helper functions for container management
+    public function addContainersToAssignment(Request $request, $assignmentId)
+    {
+        $validated = $request->validate([
+            'ship_container_ids' => 'required|array|min:1',
+            'ship_container_ids.*' => 'required|exists:ship_containers_details,id',
+        ]);
+
+        $assignment = VehicleDriverAssignment::findOrFail($assignmentId);
+        $assignment->attachShipContainers($validated['ship_container_ids']);
+
+        return response()->json([
+            'message' => 'Containers added to assignment successfully',
+            'assignment' => $assignment->load(['vehicle', 'driver', 'shipContainers'])
+        ]);
+    }
+
+    public function removeContainersFromAssignment(Request $request, $assignmentId)
+    {
+        $validated = $request->validate([
+            'ship_container_ids' => 'required|array|min:1',
+            'ship_container_ids.*' => 'required|exists:ship_containers_details,id',
+        ]);
+
+        $assignment = VehicleDriverAssignment::findOrFail($assignmentId);
+        $assignment->detachShipContainers($validated['ship_container_ids']);
+
+        return response()->json([
+            'message' => 'Containers removed from assignment successfully',
+            'assignment' => $assignment->load(['vehicle', 'driver', 'shipContainers'])
         ]);
     }
 }

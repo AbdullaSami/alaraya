@@ -60,3 +60,12 @@ Route::get('/policy-number', [PolicyController::class, 'generatePolicyNumber']);
 // Get policies by ship order data
 Route::get('/ship-order-data/{shipOrderDataId}/policies', [PolicyController::class, 'getByShipOrderData']);
 
+// Vehicle assignment management
+Route::post('/policies/{policyId}/vehicle-assignments', [PolicyController::class, 'addVehicleAssignment']);
+Route::put('/vehicle-assignments/{assignmentId}', [PolicyController::class, 'updateVehicleAssignment']);
+Route::delete('/vehicle-assignments/{assignmentId}', [PolicyController::class, 'removeVehicleAssignment']);
+
+// Container management for vehicle assignments
+Route::post('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'addContainersToAssignment']);
+Route::delete('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'removeContainersFromAssignment']);
+

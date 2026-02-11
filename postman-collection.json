@@ -1,0 +1,257 @@
+{
+	"info": {
+		"_postman_id": "policy-management-api",
+		"name": "Policy Management API",
+		"description": "Complete API collection for Policy Management with Vehicle Driver Assignments and Container Management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Policy Management",
+			"item": [
+				{
+					"name": "Get All Policies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies"]
+						},
+						"description": "Retrieve all policies with their vehicle assignments and containers"
+					}
+				},
+				{
+					"name": "Create Policy with Assignments",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ship_order_data_id\": 1,\n  \"operating_order_id\": 1,\n  \"covenant_amount\": 5000.00,\n  \"policy_type\": true,\n  \"policy_aging_date\": \"2026-02-15T10:00:00Z\",\n  \"policy_loading_date\": \"2026-02-16T10:00:00Z\",\n  \"vehicle_driver_assignments\": [\n    {\n      \"vehicle_id\": 1,\n      \"driver_id\": 1,\n      \"ship_container_ids\": [1, 2, 3]\n    },\n    {\n      \"vehicle_id\": 2,\n      \"driver_id\": 2,\n      \"ship_container_ids\": [4, 5]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/policies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies"]
+						},
+						"description": "Create a new policy with multiple vehicle assignments and containers"
+					}
+				},
+				{
+					"name": "Get Policy by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/{{policyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", "{{policyId}}"]
+						},
+						"description": "Retrieve a specific policy with all assignments and containers"
+					}
+				},
+				{
+					"name": "Update Policy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"covenant_amount\": 6000.00,\n  \"policy_type\": true,\n  \"policy_aging_date\": \"2026-02-15T10:00:00Z\",\n  \"policy_loading_date\": \"2026-02-16T10:00:00Z\",\n  \"vehicle_driver_assignments\": [\n    {\n      \"vehicle_id\": 1,\n      \"driver_id\": 1,\n      \"ship_container_ids\": [1, 2, 3, 6]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/{{policyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", "{{policyId}}"]
+						},
+						"description": "Update a policy and/or its assignments and containers"
+					}
+				},
+				{
+					"name": "Delete Policy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/{{policyId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", "{{policyId}}"]
+						},
+						"description": "Delete a policy and all related assignments"
+					}
+				},
+				{
+					"name": "Generate Policy Number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policy-number",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policy-number"]
+						},
+						"description": "Generate a new policy number in BL-YYYYMMDD-XXX format"
+					}
+				},
+				{
+					"name": "Get Policies by Ship Order",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ship-order-data/{{shipOrderDataId}}/policies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "ship-order-data", "{{shipOrderDataId}}", "policies"]
+						},
+						"description": "Get all policies for a specific ship order with remaining slots info"
+					}
+				}
+			]
+		},
+		{
+			"name": "Vehicle Assignment Management",
+			"item": [
+				{
+					"name": "Add Vehicle Assignment to Policy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vehicle_id\": 3,\n  \"driver_id\": 3,\n  \"ship_container_ids\": [7, 8, 9]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/{{policyId}}/vehicle-assignments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", "{{policyId}}", "vehicle-assignments"]
+						},
+						"description": "Add a new vehicle assignment with multiple containers to a policy"
+					}
+				},
+				{
+					"name": "Update Vehicle Assignment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vehicle_id\": 4,\n  \"driver_id\": 4,\n  \"ship_container_ids\": [10, 11]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicle-assignments/{{assignmentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "vehicle-assignments", "{{assignmentId}}"]
+						},
+						"description": "Update vehicle assignment details and/or containers"
+					}
+				},
+				{
+					"name": "Delete Vehicle Assignment",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicle-assignments/{{assignmentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "vehicle-assignments", "{{assignmentId}}"]
+						},
+						"description": "Delete a vehicle assignment and all its container relationships"
+					}
+				}
+			]
+		},
+		{
+			"name": "Container Management",
+			"item": [
+				{
+					"name": "Add Containers to Assignment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ship_container_ids\": [12, 13, 14]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicle-assignments/{{assignmentId}}/containers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "vehicle-assignments", "{{assignmentId}}", "containers"]
+						},
+						"description": "Add additional containers to an existing vehicle assignment"
+					}
+				},
+				{
+					"name": "Remove Containers from Assignment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ship_container_ids\": [12, 13]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicle-assignments/{{assignmentId}}/containers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "vehicle-assignments", "{{assignmentId}}", "containers"]
+						},
+						"description": "Remove specific containers from a vehicle assignment"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "policyId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "assignmentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "shipOrderDataId",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
