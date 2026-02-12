@@ -95,8 +95,20 @@ class PolicyController extends Controller
 
     public function show(string $id)
     {
-        $policy = Policy::with(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
-            ->findOrFail($id);
+        $policy = Policy::withwith([
+            // ship order data and its related data
+            'shipOrderData',
+            'shipOrderData.shipLineClients',
+            'shipOrderData.shipPolicies',
+            'shipOrderData.shipBookings',
+            'shipOrderData.shipContactData',
+            // operating order and its related data
+            'operatingOrder',
+            'vehicleDriverAssignments',
+            'vehicleDriverAssignments.vehicle',
+            'vehicleDriverAssignments.driver',
+            'vehicleDriverAssignments.shipContainers'
+        ])->findOrFail($id);
 
         return response()->json($policy);
     }
