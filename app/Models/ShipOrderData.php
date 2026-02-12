@@ -29,22 +29,22 @@ class ShipOrderData extends Model
     }
     public function shipLineClients()
     {
-        return $this->hasMany(ShipLineClient::class);
+        return $this->hasMany(ShipLineClient::class, 'ship_order_data_id');
     }
 
     public function shipPolicies()
     {
-        return $this->hasMany(ShipPolicy::class);
+        return $this->hasMany(ShipPolicy::class, 'ship_order_data_id');
     }
 
     public function shipBookings()
     {
-        return $this->hasMany(ShipBooking::class);
+        return $this->hasMany(ShipBooking::class, 'ship_order_data_id');
     }
 
     public function shipContactData()
     {
-        return $this->hasOne(ShipContactData::class);
+        return $this->hasOne(ShipContactData::class, 'ship_order_data_id');
     }
 
        public function policies()
