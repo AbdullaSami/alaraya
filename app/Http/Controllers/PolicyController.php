@@ -95,7 +95,7 @@ class PolicyController extends Controller
 
     public function show(string $id)
     {
-        $policy = Policy::withwith([
+        $policy = Policy::with([
             // ship order data and its related data
             'shipOrderData',
             'shipOrderData.shipLineClients',
