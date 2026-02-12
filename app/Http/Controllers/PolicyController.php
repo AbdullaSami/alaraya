@@ -37,7 +37,8 @@ class PolicyController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        try {
+            $validated = $request->validate([
             'ship_order_data_id' => 'required|exists:ship_order_data,id',
             'operating_order_id' => 'required|exists:operating_orders,id',
             'covenant_amount' => 'nullable|numeric|min:0',
@@ -91,6 +92,12 @@ class PolicyController extends Controller
             'message' => 'Policy created successfully with vehicle assignments and containers',
             'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
         ], 201);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to create policy',
+            'error' => $e->getMessage()
+        ], 500);
+    }
     }
 
     public function show(string $id)
