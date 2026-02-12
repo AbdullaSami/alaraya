@@ -12,7 +12,20 @@ class PolicyController extends Controller
 {
     public function index()
     {
-        $policies = Policy::with(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments'])->get();
+        $policies = Policy::with([
+            // ship order data and its related data
+            'shipOrderData',
+            'shipOrderData.shipLineClients',
+            'shipOrderData.shipPolicies',
+            'shipOrderData.shipBookings',
+            'shipOrderData.shipContactData',
+            // operating order and its related data
+            'operatingOrder',
+            'vehicleDriverAssignments',
+            'vehicleDriverAssignments.vehicle',
+            'vehicleDriverAssignments.driver',
+            'vehicleDriverAssignments.shipContainers'
+        ])->get();
         return response()->json($policies);
     }
 
@@ -190,8 +203,13 @@ class PolicyController extends Controller
 
     public function getByShipOrderData($shipOrderDataId)
     {
-        $shipOrderData = ShipOrderData::with(['policies' => function($query) {
-            $query->with(['operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers']);
+        $shipOrderData = ShipOrderData::with(['policies' => function ($query) {
+            $query->with([
+                'operatingOrder',
+                'vehicleDriverAssignments.vehicle',
+                'vehicleDriverAssignments.driver',
+                'vehicleDriverAssignments.shipContainers'
+            ]);
         }])->findOrFail($shipOrderDataId);
 
         return response()->json([
