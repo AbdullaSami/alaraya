@@ -12,6 +12,7 @@ use App\Http\Controllers\ShippingLineController;
 use App\Http\Controllers\ShipOrderDataController;
 use App\Http\Controllers\OperatingOrderController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\ReportsController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -69,3 +70,7 @@ Route::delete('/vehicle-assignments/{assignmentId}', [PolicyController::class, '
 Route::post('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'addContainersToAssignment']);
 Route::delete('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'removeContainersFromAssignment']);
 
+// Reports
+Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleReport']);
+Route::get('/reports/torrents/{number}', [ReportsController::class, 'torrentsReports']);
+Route::get('/reports/loading-withdrawal/{number}', [ReportsController::class, 'LoadingWithdrawalReport']);

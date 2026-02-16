@@ -47,6 +47,16 @@ class ShipOrderData extends Model
         return $this->hasOne(ShipContactData::class, 'ship_order_data_id');
     }
 
+        public function getShipOrderType()
+    {
+        if ($this->shipPolicies()->exists()) {
+            return 'policy';
+        } elseif ($this->shipBookings()->exists()) {
+            return 'booking';
+        }
+
+        return 'none';
+    }
        public function policies()
     {
         return $this->hasMany(Policy::class);
