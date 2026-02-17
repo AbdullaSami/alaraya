@@ -70,7 +70,7 @@ class ReportsController extends Controller
             'operatingOrder.torrentContainers',
             'operatingOrder.torrentContainers.container',
             'operatingOrder.torrentContainers.container.shipContainersDetail',
-            'shipLineClients.factory',
+            'shipLineClients.shipLineClientFactories',
             'shipLineClients'
         ];
 
