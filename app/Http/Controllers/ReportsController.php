@@ -24,7 +24,6 @@ class ReportsController extends Controller
                                         ->orWhereHas('shipBookings', function ($query) use ($searchValue) {
                                             $query->where('booking_number', $searchValue);
                                         })
-                                        ->with('getShipOrderType')
                                         ->with('operatingOrder.drivers')
                                         ->with('operatingOrder.vehicles')
                                         ->with('shipPolicies.operatingOrder')
@@ -50,7 +49,6 @@ class ReportsController extends Controller
             }
 
             $report = ShipOrderData::where('order_number', $searchValue)
-                                    ->with('getShipOrderType')
                                     ->with('operatingOrder')
                                     ->with('operatingOrder.torrentContainers')
                                     ->with('operatingOrder.torrentContainers.container')
@@ -73,9 +71,8 @@ class ReportsController extends Controller
             if (!$shipOrder) {
                 return response()->json(['error' => 'Ship order not found'], 404);
             }
-            
+
             $report = ShipOrderData::where('order_number', $searchValue)
-                                    ->with('getShipOrderType')
                                     ->with('operatingOrder.drivers')
                                     ->with('operatingOrder.vehicles')
                                     ->with('operatingOrder.torrentContainers')
