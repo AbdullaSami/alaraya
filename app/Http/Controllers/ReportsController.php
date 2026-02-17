@@ -12,18 +12,18 @@ class ReportsController extends Controller
             $searchValue = $number;
 
             // Check if ship order exists
-            $shipOrder = ShipOrderData::where('order_number', $searchValue)->first();
+            $shipOrder = ShipOrderData::where('order_number', 'LIKE', '%' . $searchValue . '%')->first();
             if (!$shipOrder) {
                 return response()->json(['error' => 'Ship order not found'], 404);
             }
 
             $query = ShipOrderData::query()
-                ->where('order_number', $searchValue)
+                ->where('order_number', 'LIKE', '%' . $searchValue . '%')
                 ->orWhereHas('shipPolicies', function ($query) use ($searchValue) {
-                    $query->where('policy_number', $searchValue);
+                    $query->where('policy_number', 'LIKE', '%' . $searchValue . '%');
                 })
                 ->orWhereHas('shipBookings', function ($query) use ($searchValue) {
-                    $query->where('booking_number', $searchValue);
+                    $query->where('booking_number', 'LIKE', '%' . $searchValue . '%');
                 });
 
             foreach ($relations as $relation) {
