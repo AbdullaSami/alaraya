@@ -18,12 +18,12 @@ class ReportsController extends Controller
             }
 
             $query = ShipOrderData::query()
-                ->where('order_number', 'LIKE', '%' . $searchValue . '%')
+                ->where('order_number', 'LIKE', "%{$searchValue}%")
                 ->orWhereHas('shipPolicies', function ($query) use ($searchValue) {
-                    $query->where('policy_number', 'LIKE', '%' . $searchValue . '%');
+                    $query->where('policy_number', 'LIKE', "%{$searchValue}%");
                 })
                 ->orWhereHas('shipBookings', function ($query) use ($searchValue) {
-                    $query->where('booking_number', 'LIKE', '%' . $searchValue . '%');
+                    $query->where('booking_number', 'LIKE', "%{$searchValue}%");
                 });
 
             foreach ($relations as $relation) {
@@ -41,6 +41,7 @@ class ReportsController extends Controller
         $relations = [
             'operatingOrder.drivers',
             'operatingOrder.vehicles',
+            'shipPolicies.operatingOrder',
             'shipPolicies.vehicleDriverAssignments.vehicle',
             'shipPolicies.vehicleDriverAssignments.driver',
             'shipPolicies.vehicleDriverAssignments.shipContainers',
@@ -55,7 +56,6 @@ class ReportsController extends Controller
             'operatingOrder',
             'operatingOrder.torrentContainers',
             'operatingOrder.torrentContainers.container',
-            'operatingOrder.torrentContainers.container.shipContainersDetail',
             'shipPolicies.vehicleDriverAssignments.shipContainers',
             'shipBookings'
         ];
@@ -69,7 +69,6 @@ class ReportsController extends Controller
             'operatingOrder.vehicles',
             'operatingOrder.torrentContainers',
             'operatingOrder.torrentContainers.container',
-            'operatingOrder.torrentContainers.container.shipContainersDetail',
             'shipLineClients.shipLineClientFactories.factory',
             'shipLineClients'
         ];
