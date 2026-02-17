@@ -41,7 +41,6 @@ class ReportsController extends Controller
         $relations = [
             'operatingOrder.drivers',
             'operatingOrder.vehicles',
-            'shipPolicies.operatingOrder',
             'shipPolicies.vehicleDriverAssignments.vehicle',
             'shipPolicies.vehicleDriverAssignments.driver',
             'shipPolicies.vehicleDriverAssignments.shipContainers',
