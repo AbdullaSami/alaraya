@@ -21,8 +21,8 @@ class Policy extends Model
 
     protected $casts = [
         'policy_type' => 'boolean',
-        'policy_aging_date' => 'datetime',
-        'policy_loading_date' => 'datetime',
+        'policy_aging_date' => 'string',
+        'policy_loading_date' => 'string',
     ];
 
     public function shipOrderData()
