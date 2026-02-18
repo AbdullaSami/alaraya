@@ -75,27 +75,21 @@ class ReportsController extends Controller
 
             $report = ShipOrderData::query()
                 ->where('order_number', 'LIKE', "%{$searchValue}%")
-                ->with('operatingOrder.drivers')
                 ->with('operatingOrder.vehicles')
+                ->with('operatingOrder.drivers')
                 ->with('operatingOrder.torrentContainers')
                 ->with('operatingOrder.torrentContainers.container')
-                ->with('operatingOrder.torrentContainers.container.shipContainersDetail')
-                ->with('shipLineClients.factory')
-                ->with('shipLineClients')
+                ->with('operatingOrder.shipLineClients.shipLineClientFactories.factory')
                 ->get();
-            return response()->json($report, 200);
+            return response()->json(
+                [
+                    "ship_orders_data" => $report,
+                    "ship_order_type" => $shipOrder->getShipOrderType(),
+                ],
+                200
+            );
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
-
-    // public function alrayaVehicleReports($number){
-    //     try {
-    //         $searchValue = $number;
-    //         $report = Vehicle::where('number', $searchValue)->get();
-    //         return response()->json($report, 200);
-    //     } catch (\Throwable $th) {
-    //         return response()->json(['error' => $th->getMessage()], 500);
-    //     }
-    // }
 }
