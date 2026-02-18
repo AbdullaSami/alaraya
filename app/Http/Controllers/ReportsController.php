@@ -18,9 +18,9 @@ class ReportsController extends Controller
 
             $report = ShipOrderData::query()
                                     ->where('order_number', 'LIKE', "%{$searchValue}%")
-                                    ->with('operatingOrder.drivers.driver')
-                                    ->with('operatingOrder.vehicles.vehicle')
-                                    ->with('operatingOrder.torrentContainers.container')
+                                    ->with('policies.vehicleDriverAssignments.vehicle')
+                                    ->with('policies.vehicleDriverAssignments.driver')
+                                    ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
                                     ->get();
                 return response()->json(
                     [
@@ -47,7 +47,6 @@ class ReportsController extends Controller
                                     ->with('operatingOrder')
                                     ->with('operatingOrder.torrentContainers')
                                     ->with('operatingOrder.torrentContainers.container')
-                                    ->with('operatingOrder.torrentContainers.container.shipContainersDetail')
                                     ->get();
             return response()->json(
                                     [
