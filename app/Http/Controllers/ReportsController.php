@@ -18,10 +18,15 @@ class ReportsController extends Controller
 
             $report = ShipOrderData::query()
                                     ->where('order_number', 'LIKE', "%{$searchValue}%")
-                                    ->with('getShipOrderType')
+                                    ->with('operatingOrder')
                                     ->get();
 
-                return response()->json($report, 200);
+                return response()->json(
+                    [
+                        "ship_orders_data" => $report,
+                        "ship_order_type" => $shipOrder->getShipOrderType(),
+                    ],
+                 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
