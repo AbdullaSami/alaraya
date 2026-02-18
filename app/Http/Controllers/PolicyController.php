@@ -44,7 +44,7 @@ class PolicyController extends Controller
             'covenant_amount' => 'nullable|numeric|min:0',
             'policy_type' => 'boolean',
             'policy_aging_date' => 'required_if:policy_type,true|nullable|string',
-            'policy_loading_date' => 'required_if:policy_type,true|nullable|string|after_or_equal:policy_aging_date',
+            'policy_loading_date' => 'required_if:policy_type,true|nullable|string',
             'vehicle_driver_assignments' => 'required|array|min:1',
             'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
             'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
