@@ -20,7 +20,6 @@ class ReportsController extends Controller
                                     ->where('order_number', 'LIKE', "%{$searchValue}%")
                                     ->with('operatingOrder.drivers.driver')
                                     ->with('operatingOrder.vehicles.vehicle')
-                                    ->with('shipPolicies.vehicleDriverAssignments.shipContainers')
                                     ->with('operatingOrder.torrentContainers.container')
                                     ->get();
                 return response()->json(
