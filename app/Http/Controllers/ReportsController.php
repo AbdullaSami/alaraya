@@ -36,7 +36,6 @@ class ReportsController extends Controller
     public function torrentsReports($number){
         try {
             $searchValue = $number;
-
             // Check if ship order exists
             $shipOrder = ShipOrderData::where('order_number', 'LIKE', "%{$searchValue}%")->first();
             if (!$shipOrder) {
@@ -49,10 +48,13 @@ class ReportsController extends Controller
                                     ->with('operatingOrder.torrentContainers')
                                     ->with('operatingOrder.torrentContainers.container')
                                     ->with('operatingOrder.torrentContainers.container.shipContainersDetail')
-                                    ->with('shipPolicies.vehicleDriverAssignments.shipContainers')
-                                    ->with('shipBookings')
                                     ->get();
-            return response()->json($report, 200);
+            return response()->json(
+                                    [
+                        "ship_orders_data" => $report,
+                        "ship_order_type" => $shipOrder->getShipOrderType(),
+                    ],
+                 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
