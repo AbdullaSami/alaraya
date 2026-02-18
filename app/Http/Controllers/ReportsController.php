@@ -79,7 +79,7 @@ class ReportsController extends Controller
                 ->with('operatingOrder.drivers')
                 ->with('operatingOrder.torrentContainers')
                 ->with('operatingOrder.torrentContainers.container')
-                ->with('operatingOrder.shipLineClients.shipLineClientFactories.factory')
+                ->with('shipLineClients.shipLineClientFactories.factory')
                 ->get();
             return response()->json(
                 [
