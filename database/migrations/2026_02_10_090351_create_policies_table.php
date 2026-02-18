@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('policy_number')->unique();
             $table->double('covenant_amount')->nullable();
             $table->boolean('policy_type')->default(false);
-            $table->dateTime('policy_aging_date')->nullable();
-            $table->dateTime('policy_loading_date')->nullable();
+            $table->string('policy_aging_date')->nullable();
+            $table->string('policy_loading_date')->nullable();
             $table->timestamps();
         });
     }
