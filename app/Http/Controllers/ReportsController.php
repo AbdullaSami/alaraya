@@ -17,22 +17,10 @@ class ReportsController extends Controller
             }
 
             $report = ShipOrderData::query()
-                                        ->where('order_number', 'LIKE', "%{$searchValue}%")
-                                        ->orWhereHas('shipPolicies', function ($query) use ($searchValue) {
-                                            $query->where('policy_number', 'LIKE', "%{$searchValue}%");
-                                        })
-                                        ->orWhereHas('shipBookings', function ($query) use ($searchValue) {
-                                            $query->where('booking_number', 'LIKE', "%{$searchValue}%");
-                                        })
-                                        ->with('operatingOrder.drivers')
-                                        ->with('operatingOrder.vehicles')
-                                        ->with('shipPolicies.operatingOrder')
-                                        ->with('shipPolicies.vehicleDriverAssignments.vehicle')
-                                        ->with('shipPolicies.vehicleDriverAssignments.driver')
-                                        ->with('shipPolicies.vehicleDriverAssignments.shipContainers')
-                                        ->with('shipBookings')
-                                        ->get();
-                return response()->json($report, 200);
+                                    ->where('order_number', 'LIKE', "%{$searchValue}%")
+                                    ->first();
+
+                return response()->json($report->getShipOrderType(), 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
