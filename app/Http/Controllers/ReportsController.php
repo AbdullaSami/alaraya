@@ -93,10 +93,13 @@ class ReportsController extends Controller
         }
     }
 
-    public function clientAccountStatements($number, $clientName){
+    public function clientAccountStatements(Request $request){
         try {
             // Search ship orders by order number and/or client name
             $query = ShipOrderData::with(['shipLineClients.client', 'operatingOrder', 'transportReceipt']);
+
+            $number = $request->number;
+            $clientName = $request->clientName;
 
             // Apply filters if parameters are provided
             if (!empty($number)) {
