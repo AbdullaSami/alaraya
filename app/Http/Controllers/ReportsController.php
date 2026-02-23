@@ -96,7 +96,7 @@ class ReportsController extends Controller
     public function clientAccountStatements(Request $request){
         try {
             // Search ship orders by order number and/or client name
-            $query = ShipOrderData::with(['shipLineClients.client', 'operatingOrder', 'operatingOrder.vehicle', 'operatingOrder.driver', 'transportReceipt']);
+            $query = ShipOrderData::with(['shipLineClients.client', 'operatingOrder', 'operatingOrder.vehicles', 'operatingOrder.drivers', 'transportReceipt']);
 
             $number = $request->number;
             $clientName = $request->clientName;
