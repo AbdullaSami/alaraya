@@ -181,18 +181,11 @@ class ReportsController extends Controller
                     'transfers_count' => $shipOrder->transfers_count,
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
-                    'vehicles' => $shipOrder->policies->flatMap(function($policy) {
+                    'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function($policy) {
                         return $policy->vehicleDriverAssignments->map(function($assignment) {
                             return [
                                 'id' => $assignment->id,
                                 'vehicle_info' => $assignment->vehicle ?? null,
-                            ];
-                        });
-                    })->unique('id')->values(),
-                    'drivers' => $shipOrder->policies->flatMap(function($policy) {
-                        return $policy->vehicleDriverAssignments->map(function($assignment) {
-                            return [
-                                'id' => $assignment->id,
                                 'driver_info' => $assignment->driver ?? null,
                             ];
                         });
