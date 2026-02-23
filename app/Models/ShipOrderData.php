@@ -23,6 +23,10 @@ class ShipOrderData extends Model
         'transfers_count',
     ];
 
+    public function transportReceipt()
+    {
+        return $this->hasMany(TransportReceipt::class);
+    }
     public function operatingOrder()
     {
         return $this->hasOne(OperatingOrder::class);

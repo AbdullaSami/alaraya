@@ -13,6 +13,7 @@ use App\Http\Controllers\ShipOrderDataController;
 use App\Http\Controllers\OperatingOrderController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\TransportReceiptController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -42,6 +43,9 @@ Route::apiResource('clients', ClientsController::class);
 Route::apiResource('factories', FactoriesController::class);
 Route::apiResource('destinations', DestinationController::class);
 Route::apiResource('shipping-lines', ShippingLineController::class);
+
+// Handle Transport Receipt
+Route::apiResource('/transport-receipts', TransportReceiptController::class);
 
 // Ship order number generation
 Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
