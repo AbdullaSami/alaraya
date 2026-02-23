@@ -78,4 +78,4 @@ Route::delete('/vehicle-assignments/{assignmentId}/containers', [PolicyControlle
 Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleReport']);
 Route::get('/reports/torrents/{number}', [ReportsController::class, 'torrentsReports']);
 Route::get('/reports/loading-withdrawal/{number}', [ReportsController::class, 'LoadingWithdrawalReport']);
-Route::get('/reports/ship-order/{number}/client/{clientName}', [ReportsController::class, 'clientAccountStatements']);
+Route::get('/reports/ship-order/{number?}/client/{clientName}', [ReportsController::class, 'clientAccountStatements']);
