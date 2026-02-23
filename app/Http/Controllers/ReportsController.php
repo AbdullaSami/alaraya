@@ -96,7 +96,12 @@ class ReportsController extends Controller
     public function clientAccountStatements(Request $request){
         try {
             // Search ship orders by order number and/or client name
-            $query = ShipOrderData::with(['shipLineClients.client', 'operatingOrder', 'operatingOrder.vehicles', 'operatingOrder.drivers', 'transportReceipt']);
+            $query = ShipOrderData::with([
+                'shipLineClients.client',
+                'operatingOrder',
+                'policies.vehicleDriverAssignments.vehicle',
+                'policies.vehicleDriverAssignments.driver',
+                'transportReceipt']);
 
             $number = $request->number;
             $clientName = $request->clientName;
@@ -176,6 +181,22 @@ class ReportsController extends Controller
                     'transfers_count' => $shipOrder->transfers_count,
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
+                    'vehicles' => $shipOrder->policies->flatMap(function($policy) {
+                        return $policy->vehicleDriverAssignments->map(function($assignment) {
+                            return [
+                                'id' => $assignment->id,
+                                'vehicle_info' => $assignment->vehicle ?? null,
+                            ];
+                        });
+                    })->unique('id')->values(),
+                    'drivers' => $shipOrder->policies->flatMap(function($policy) {
+                        return $policy->vehicleDriverAssignments->map(function($assignment) {
+                            return [
+                                'id' => $assignment->id,
+                                'driver_info' => $assignment->driver ?? null,
+                            ];
+                        });
+                    })->unique('id')->values(),
                     'clients' => $shipOrder->shipLineClients->map(function($shipLineClient) {
                         return [
                             'client_name' => $shipLineClient->client->client_name ?? null,
