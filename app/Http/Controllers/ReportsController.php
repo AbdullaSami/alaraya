@@ -96,7 +96,7 @@ class ReportsController extends Controller
     public function clientAccountStatements(Request $request){
         try {
             // Search ship orders by order number and/or client name
-            $query = ShipOrderData::with(['shipLineClients.client', 'operatingOrder', 'transportReceipt']);
+            $query = ShipOrderData::with(['shipLineClients.client', 'operatingOrder', 'operatingOrder.vehicle', 'operatingOrder.driver', 'transportReceipt']);
 
             $number = $request->number;
             $clientName = $request->clientName;
@@ -186,7 +186,7 @@ class ReportsController extends Controller
             }
 
             // Calculate net amount
-            $netAmount = $totalTransportReceiptsSum - $totalNoloanSum;
+            $netAmount = $totalTransportReceiptsSum + $totalNoloanSum;
 
             return response()->json([
                 'success' => true,
