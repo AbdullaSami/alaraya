@@ -54,9 +54,9 @@ class ShipOrderData extends Model
         public function getShipOrderType()
     {
         if ($this->shipPolicies()->exists()) {
-            return $this->shipPolicies()->first();
+            return $this->shipPolicies();
         } elseif ($this->shipBookings()->exists()) {
-            return $this->shipBookings()->first();
+            return $this->shipBookings();
         }
 
         return null;
