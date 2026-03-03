@@ -23,7 +23,6 @@ class ReportsController extends Controller
                 ->with('policies.vehicleDriverAssignments.vehicle')
                 ->with('policies.vehicleDriverAssignments.driver')
                 ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
-                ->with('getShipOrderType')
                 ->with('shipLineClients.client')
                 ->get();
             return response()->json(
@@ -51,7 +50,6 @@ class ReportsController extends Controller
             $report = ShipOrderData::query()
                 ->where('order_number', 'LIKE', "%{$searchValue}%")
                 ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
-                ->with('getShipOrderType')
                 ->with('shipLineClients.client')
                 ->get();
             return response()->json(
@@ -84,7 +82,6 @@ class ReportsController extends Controller
                 ->with('operatingOrder.torrentContainers')
                 ->with('operatingOrder.torrentContainers.container')
                 ->with('shipLineClients.shipLineClientFactories.factory')
-                ->with('getShipOrderType')
                 ->with('shipLineClients.client')
                 ->get();
             return response()->json(
