@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\DriversController;
 use App\Http\Controllers\ClientsController;
@@ -35,6 +36,9 @@ Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{id}', [AuthController::class, 'deleteUser']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Handle Users
+    route::apiResource('users', UsersController::class);
 });
 
 Route::apiResource('vehicles', VehicleController::class);
