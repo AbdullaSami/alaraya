@@ -36,9 +36,6 @@ Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{id}', [AuthController::class, 'deleteUser']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Handle Users
-    route::apiResource('users', UsersController::class);
 });
 
 Route::apiResource('vehicles', VehicleController::class);
