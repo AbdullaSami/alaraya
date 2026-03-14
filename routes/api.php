@@ -15,6 +15,9 @@ use App\Http\Controllers\OperatingOrderController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\TransportReceiptController;
+use App\Http\Controllers\TreasuryController;
+use App\Http\Controllers\TreasuryOperationsController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -52,6 +55,13 @@ Route::apiResource('clients', ClientsController::class);
 Route::apiResource('factories', FactoriesController::class);
 Route::apiResource('destinations', DestinationController::class);
 Route::apiResource('shipping-lines', ShippingLineController::class);
+
+// Handel Treasury data methods
+Route::apiResource('/treasuries', TreasuryController::class);
+Route::post('/treasury/deposit', [TreasuryOperationsController::class, 'deposit']);
+Route::post('/treasury/send', [TreasuryOperationsController::class, 'send']);
+Route::post('/treasury/deduction', [TreasuryOperationsController::class, 'deduction']);
+Route::post('/treasury/shift-handle', [TreasuryOperationsController::class, 'shiftHandle']);
 
 // Handle Transport Receipt
 Route::apiResource('/transport-receipts', TransportReceiptController::class);
