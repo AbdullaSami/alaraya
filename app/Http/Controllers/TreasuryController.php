@@ -30,7 +30,7 @@ class TreasuryController extends Controller
             $validatedData = $request->validate([
                 'is_main' => 'required|boolean',
                 'name' => 'required|string|max:255',
-                'balance' => 'nullable|string',
+                'balance' => 'nullable|decimal',
             ]);
             $treasury = Treasury::create($validatedData);
             return response()->json($treasury, 201);
