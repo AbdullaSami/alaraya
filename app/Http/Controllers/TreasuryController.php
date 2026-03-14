@@ -32,6 +32,11 @@ class TreasuryController extends Controller
                 'name' => 'required|string|max:255',
                 'balance' => 'nullable|decimal:0,2',
             ]);
+
+            // Ensure only one main treasury exists
+            if ($validatedData['is_main']) {
+                Treasury::where('is_main', true)->update(['is_main' => false]);
+            }
             $treasury = Treasury::create($validatedData);
             return response()->json($treasury, 201);
         } catch (\Exception $e) {
@@ -62,6 +67,11 @@ class TreasuryController extends Controller
                 'name' => 'required|string|max:255',
                 'balance' => 'nullable|decimal:0,2',
             ]);
+
+            // Ensure only one main treasury exists
+            if ($validatedData['is_main']) {
+                Treasury::where('is_main', true)->where('id', '!=', $treasury->id)->update(['is_main' => false]);
+            }
             $treasury->update($validatedData);
             return response()->json($treasury);
         } catch (\Exception $e) {
