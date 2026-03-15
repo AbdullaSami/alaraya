@@ -11,7 +11,7 @@ class AuthController extends Controller
     public function getUsers()
     {
         try {
-            $users = User::with('roles')->get();
+            $users = User::with('roles', 'treasuries')->get();
             return response()->json(['users' => $users], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve users', 'message' => $e->getMessage()], 500);
