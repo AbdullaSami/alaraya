@@ -85,6 +85,10 @@ class AuthController extends Controller
                 'password'      => 'sometimes|string|min:8',
                 'phone_number'  => 'sometimes|string|max:20',
                 'role'          => 'sometimes|string|in:admin,operations,data_entry',
+                'permissions'   => 'sometimes|array',
+                'permissions.*' => 'exists:permissions,name',
+                'treasury_id'   => 'nullable|exists:treasuries,id',
+
             ]);
 
             if (isset($validatedData['password'])) {
@@ -95,6 +99,12 @@ class AuthController extends Controller
             $user->update($validatedData);
             if (isset($validatedData['role'])) {
                 $user->syncRoles([$validatedData['role']]);
+            }
+            if (isset($validatedData['permissions'])) {
+                $user->syncPermissions($validatedData['permissions']);
+            }
+            if (isset($validatedData['treasury_id'])) {
+                $user->treasuries()->sync([$validatedData['treasury_id']]);
             }
             return response()->json(['message' => 'User updated successfully', 'user' => $user], 200);
         } catch (\Exception $e) {
