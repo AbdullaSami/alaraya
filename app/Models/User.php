@@ -28,6 +28,11 @@ class User extends Authenticatable
         'phone_number',
     ];
 
+    public function treasuries(){
+        return $this->belongsToMany(Treasury::class, 'treasury_user');
+    }
+
+    
     /**
      * The attributes that should be hidden for serialization.
      *

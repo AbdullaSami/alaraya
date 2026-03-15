@@ -15,6 +15,9 @@ class Treasury extends Model
         'balance',
     ];
 
+    public function users(){
+        return $this->belongsToMany(User::class, 'treasury_user');
+    }
     public function receivableTransactions()
     {
         return $this->hasMany(TreasuryTransactions::class, 'receivable_id');

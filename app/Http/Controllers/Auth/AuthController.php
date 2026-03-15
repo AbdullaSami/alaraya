@@ -27,11 +27,22 @@ class AuthController extends Controller
                 'email'         => 'required|string|email|max:255|unique:users,email',
                 'password'      => 'required|string|min:8',
                 'phone_number'  => 'required|string|max:20',
-                'role'          => 'required|string|in:admin,operations,data_entry',
+                'role'          => 'sometimes|string|in:admin,operations,data_entry',
+                'permissions'   => 'sometimes|array',
+                'permissions.*' => 'exists:permissions,name',
+                'treasury_id'   => 'nullable|exists:treasuries,id',
             ]);
             $validatedData['password'] = bcrypt($validatedData['password']);
             $user = User::create($validatedData);
-            $user->assignRole($validatedData['role']);
+            if (isset($validatedData['role'])) {
+                $user->assignRole($validatedData['role']);
+            }
+            if (isset($validatedData['permissions'])) {
+                $user->syncPermissions($validatedData['permissions']);
+            }
+            if (isset($validatedData['treasury_id'])) {
+                $user->treasuries()->attach($validatedData['treasury_id']);
+            }
             return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create user', 'message' => $e->getMessage()], 500);
@@ -76,9 +87,9 @@ class AuthController extends Controller
                 'role'          => 'sometimes|string|in:admin,operations,data_entry',
             ]);
 
-            if(isset($validatedData['password'])){
+            if (isset($validatedData['password'])) {
                 $validatedData['password'] = bcrypt($validatedData['password']);
-            }else{
+            } else {
                 unset($validatedData['password']);
             }
             $user->update($validatedData);
@@ -101,5 +112,4 @@ class AuthController extends Controller
             return response()->json(['error' => 'Failed to delete user', 'message' => $e->getMessage()], 500);
         }
     }
-
 }
