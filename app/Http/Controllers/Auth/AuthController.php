@@ -11,7 +11,7 @@ class AuthController extends Controller
     public function getUsers()
     {
         try {
-            $users = User::with('roles', 'treasuries.treasury')->get();
+            $users = User::with('roles', 'treasuries')->get();
             return response()->json(['users' => $users], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve users', 'message' => $e->getMessage()], 500);
@@ -30,7 +30,8 @@ class AuthController extends Controller
                 'role'          => 'sometimes|string|in:admin,operations,data_entry',
                 'permissions'   => 'sometimes|array',
                 'permissions.*' => 'exists:permissions,name',
-                'treasury_id'   => 'nullable|exists:treasuries,id',
+                'treasury_id'   => 'nullable|array',
+                'treasury_id.*' => 'exists:treasuries,id',
             ]);
             $validatedData['password'] = bcrypt($validatedData['password']);
             $user = User::create($validatedData);
@@ -41,7 +42,7 @@ class AuthController extends Controller
                 $user->syncPermissions($validatedData['permissions']);
             }
             if (isset($validatedData['treasury_id'])) {
-                $user->treasuries()->attach($validatedData['treasury_id']);
+                $user->treasuries()->sync([$validatedData['treasury_id']]);
             }
             return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
         } catch (\Exception $e) {
@@ -87,8 +88,8 @@ class AuthController extends Controller
                 'role'          => 'sometimes|string|in:admin,operations,data_entry',
                 'permissions'   => 'sometimes|array',
                 'permissions.*' => 'exists:permissions,name',
-                'treasury_id'   => 'nullable|exists:treasuries,id',
-
+                'treasury_id'   => 'nullable|array',
+                'treasury_id.*' => 'exists:treasuries,id',
             ]);
 
             if (isset($validatedData['password'])) {
