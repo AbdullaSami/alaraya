@@ -29,7 +29,7 @@ class TreasuryOperationsController extends Controller
 
             // Create a new transaction for the deposit
             $transaction = new TreasuryTransactions();
-            $transaction->user_id = auth()->id();
+            $transaction->user_id = auth()->user()->id();
             $transaction->receivable_id = $mainTreasury->id;
             $transaction->payable_id = $mainTreasury->id;
             $transaction->amount = $request->input('amount');
