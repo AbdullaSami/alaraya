@@ -14,7 +14,7 @@ class TreasuryController extends Controller
     public function index()
     {
         try{
-            $treasuries = Treasury::with('receivableTransactions', 'payableTransactions', 'deductions', 'shiftHandles')->get();
+            $treasuries = Treasury::all();
             return response()->json($treasuries);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
