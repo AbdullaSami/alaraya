@@ -109,12 +109,11 @@ class PolicyController extends Controller
             'shipOrderData',
             'shipOrderData.shipLineClients',
             'shipOrderData.shipPolicies',
-            'shipOrderData.shipPolicies.shipContainersDetails',
             'shipOrderData.shipBookings',
-            'shipOrderData.shipBookings.shipContainersDetails',
             'shipOrderData.shipContactData',
             // operating order and its related data
             'operatingOrder',
+            'operatingOrder.torrentContainers',
             'vehicleDriverAssignments',
             'vehicleDriverAssignments.vehicle',
             'vehicleDriverAssignments.driver',
