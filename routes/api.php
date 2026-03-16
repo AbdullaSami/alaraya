@@ -32,7 +32,9 @@ use App\Http\Controllers\TreasuryOperationsController;
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {return $request->user();});
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
     Route::get('/users', [AuthController::class, 'getUsers']);
     Route::post('/users', [AuthController::class, 'createUser']);
     Route::put('/users/{id}', [AuthController::class, 'editUser']);
@@ -42,11 +44,10 @@ Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('roles-permissions')->group(function () {
 
-    Route::get('/roles', [RolePermissionController::class, 'roles']);
+        Route::get('/roles', [RolePermissionController::class, 'roles']);
 
-    Route::get('/permissions', [RolePermissionController::class, 'permissions']);
-
-});
+        Route::get('/permissions', [RolePermissionController::class, 'permissions']);
+    });
 });
 
 Route::apiResource('vehicles', VehicleController::class);
@@ -57,12 +58,13 @@ Route::apiResource('destinations', DestinationController::class);
 Route::apiResource('shipping-lines', ShippingLineController::class);
 
 // Handel Treasury data methods
-Route::apiResource('/treasuries', TreasuryController::class);
-Route::post('/treasury/deposit', [TreasuryOperationsController::class, 'deposit']);
-Route::post('/treasury/send', [TreasuryOperationsController::class, 'send']);
-Route::post('/treasury/deduction', [TreasuryOperationsController::class, 'deduction']);
-Route::post('/treasury/shift-handle', [TreasuryOperationsController::class, 'shiftHandle']);
-
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('/treasuries', TreasuryController::class);
+    Route::post('/treasury/deposit', [TreasuryOperationsController::class, 'deposit']);
+    Route::post('/treasury/send', [TreasuryOperationsController::class, 'send']);
+    Route::post('/treasury/deduction', [TreasuryOperationsController::class, 'deduction']);
+    Route::post('/treasury/shift-handle', [TreasuryOperationsController::class, 'shiftHandle']);
+});
 // Handle Transport Receipt
 Route::apiResource('/transport-receipts', TransportReceiptController::class);
 
