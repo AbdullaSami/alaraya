@@ -26,7 +26,7 @@ class TreasuryOperationsController extends Controller
         try {
             // Find the main treasury
             $mainTreasury = Treasury::where('is_main', true)->firstOrFail();
-            $userId = auth()->id();
+            $userId = auth()->user()->id;
             // Create a new transaction for the deposit
             $transaction = new TreasuryTransactions();
             $transaction->user_id = $userId;
