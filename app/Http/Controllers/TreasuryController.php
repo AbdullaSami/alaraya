@@ -14,7 +14,7 @@ class TreasuryController extends Controller
     public function index()
     {
         try{
-            $treasuries = Treasury::all();
+            $treasuries = Treasury::with('receivableTransactions', 'payableTransactions', 'deductions', 'shiftHandles')->get();
             return response()->json($treasuries);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -50,6 +50,7 @@ class TreasuryController extends Controller
     public function show(Treasury $treasury)
     {
         try {
+            $treasury->load('receivableTransactions', 'payableTransactions', 'deductions', 'shiftHandles');
             return response()->json($treasury);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
