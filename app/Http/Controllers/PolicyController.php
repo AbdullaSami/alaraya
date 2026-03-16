@@ -17,7 +17,9 @@ class PolicyController extends Controller
             'shipOrderData',
             'shipOrderData.shipLineClients',
             'shipOrderData.shipPolicies',
+            'shipOrderData.shipPolicies.shipContainersDetails',
             'shipOrderData.shipBookings',
+            'shipOrderData.shipBookings.shipContainersDetails',
             'shipOrderData.shipContactData',
             // operating order and its related data
             'operatingOrder',
@@ -145,20 +147,6 @@ class PolicyController extends Controller
             'vehicle_driver_assignments.*.ship_container_ids' => 'required|array|min:1',
             'vehicle_driver_assignments.*.ship_container_ids.*' => 'required|exists:ship_containers_details,id',
         ]);
-
-        if (isset($validated['ship_order_data_id'])) {
-            $newShipOrderData = ShipOrderData::findOrFail($validated['ship_order_data_id']);
-
-            if ($newShipOrderData->id !== $policy->ship_order_data_id) {
-                $currentPoliciesCount = $newShipOrderData->policies()->count();
-                if ($currentPoliciesCount >= $newShipOrderData->transfers_count) {
-                    return response()->json([
-                        'message' => 'Cannot move policy to this ship order. Maximum limit reached.',
-                        'remaining_slots' => $newShipOrderData->remainingPolicySlots()
-                    ], 422);
-                }
-            }
-        }
 
         // Update policy data
         $policyData = $request->only([
