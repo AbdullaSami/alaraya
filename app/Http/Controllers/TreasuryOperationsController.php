@@ -111,7 +111,7 @@ class TreasuryOperationsController extends Controller
      *  Deduct amount from sub-treasury with type and reason.
      */
 
-    public function deduct(Request $request)
+    public function deduction(Request $request)
     {
         // validate data
         $validatedData = $request->validate([
@@ -163,9 +163,8 @@ class TreasuryOperationsController extends Controller
      * Assign shift to treasury.
      */
 
-    public function assignShift(Request $request)
+    public function shiftHandle(Request $request)
     {
-
         // Validate data.
         $validatedData = $request->validate([
             'treasury_id' => 'required|exists:treasuries,id',
