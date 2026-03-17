@@ -120,18 +120,16 @@ class ShipOrderDataController extends Controller
                 'clearance_data.redirect_location' => 'nullable|string',
                 'treasury_id' => 'nullable|integer|exists:treasuries,id',
             ]);
+            $user_treasury_id = auth()->user()->treasuries()->pluck('id')->toArray();
+            if (count($user_treasury_id) > 1) {
+                $treasury_id = $validatedData['treasury_id'] ?? null;
+            } else {
+                $treasury_id = $user_treasury_id[0] ?? null;
+            }
 
-            return DB::transaction(function () use ($validatedData, $user_treasury_id) {
+            return DB::transaction(function () use ($validatedData, $treasury_id) {
                 // Generate order number
                 // $orderNumber = $this->generateOrderNumber();
-
-                $user_treasury_id = auth()->user()->treasuries;
-                dd($user_treasury_id);
-                if (count($user_treasury_id) > 1) {
-                    $treasury_id = $validatedData['treasury_id'] ?? null;
-                } else {
-                    $treasury_id = $user_treasury_id[0] ?? null;
-                }
                 // Create Ship Order Data
                 $shipOrderData = ShipOrderData::create([
                     'order_number' => $validatedData['order_number'],
