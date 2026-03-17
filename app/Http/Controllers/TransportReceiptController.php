@@ -6,7 +6,7 @@ use App\Models\TransportReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Validation\Rule;
 class TransportReceiptController extends Controller
 {
     /**
@@ -30,6 +30,12 @@ class TransportReceiptController extends Controller
         try {
             $validated = $request->validate([
                 'ship_order_id' => 'required|exists:ship_order_data,id',
+                'policy_id' => [
+                    'nullable',
+                    Rule::exists('policies', 'id')->where(function ($query) use ($request) {
+                        $query->where('ship_order_id', $request->ship_order_id);
+                    }),
+                ],
                 'army_scales' => 'nullable|numeric|min:0',
                 'roads_and_bridges' => 'nullable|numeric|min:0',
                 'road_cards' => 'nullable|numeric|min:0',
