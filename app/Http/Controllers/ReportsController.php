@@ -214,6 +214,7 @@ class ReportsController extends Controller
                 'success' => true,
                 'data' => [
                     'ship_orders_count' => $totalShipOrdersCount,
+                    'policies' => $shipOrders["policies"],
                     'operating_orders' => $totalOperatingOrders,
                     'total_orders_noloans' => $totalOrdersNoloans,
                     'ship_orders_details' => $shipOrdersDetails,
