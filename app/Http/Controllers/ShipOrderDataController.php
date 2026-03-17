@@ -120,18 +120,8 @@ class ShipOrderDataController extends Controller
                 'clearance_data.redirect_location' => 'nullable|string',
                 'treasury_id' => 'nullable|integer|exists:treasuries,id',
             ]);
-            $userTreasuries = auth()->user()->treasuries()->pluck('treasury_id');
 
-            dd($userTreasuries);
-            $treasury_id = $userTreasuries->count() > 1
-                ? ($validatedData['treasury_id'] ?? null)
-                : $userTreasuries->first();
-
-            if ($treasury_id && !$userTreasuries->contains($treasury_id)) {
-                abort(403, 'Unauthorized treasury');
-            }
-
-            return DB::transaction(function () use ($validatedData, $treasury_id) {
+            return DB::transaction(function () use ($validatedData) {
                 // Generate order number
                 // $orderNumber = $this->generateOrderNumber();
                 // Create Ship Order Data
@@ -149,7 +139,7 @@ class ShipOrderDataController extends Controller
                     'transfers_count' => $validatedData['transfers_count'] ?? 1,
                 ]);
 
-                $shipOrderData->orderTreasury()->sync($treasury_id);
+                $shipOrderData->orderTreasury()->sync($validatedData['treasury_id']);
                 // Create Ship Line Client
                 $shipLineClient = ShipLineClient::create([
                     'ship_order_data_id' => $shipOrderData->id,
