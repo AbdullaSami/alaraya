@@ -120,11 +120,14 @@ class ShipOrderDataController extends Controller
                 'clearance_data.redirect_location' => 'nullable|string',
                 'treasury_id' => 'nullable|integer|exists:treasuries,id',
             ]);
-            $user_treasury_id = auth()->user()->treasuries()->pluck('id')->toArray();
-            if (count($user_treasury_id) > 1) {
-                $treasury_id = $validatedData['treasury_id'] ?? null;
-            } else {
-                $treasury_id = $user_treasury_id[0] ?? null;
+            $userTreasuries = auth()->user()->treasuries()->pluck('id');
+
+            $treasury_id = $userTreasuries->count() > 1
+                ? ($validatedData['treasury_id'] ?? null)
+                : $userTreasuries->first();
+
+            if ($treasury_id && !$userTreasuries->contains($treasury_id)) {
+                abort(403, 'Unauthorized treasury');
             }
 
             return DB::transaction(function () use ($validatedData, $treasury_id) {
