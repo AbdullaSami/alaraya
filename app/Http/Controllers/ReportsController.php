@@ -188,8 +188,8 @@ class ReportsController extends Controller
                     'transfers_count' => $shipOrder->transfers_count,
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
-                    'transportReceipt' => $shipOrder->transportReceipt->flatMap(function($transportReceipt){
-                        return $transportReceipt->policy->map(function($policy, $transportReceipt) {
+                    'transportReceipt' => $shipOrder->transportReceipt->map(function ($transportReceipt) {
+                            $policy = $transportReceipt->policy;
                             return [
                                 'policy_number' => $policy->policy_number,
                                 'transport_receipt_details' => [
@@ -208,8 +208,7 @@ class ReportsController extends Controller
                                     'brokers' => $transportReceipt->brokers,
                                 ]
                             ];
-                        });
-                    }),
+                        }),
                     'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function($policy) {
                         return $policy->vehicleDriverAssignments->map(function($assignment) {
                             return [
