@@ -18,6 +18,10 @@ class Treasury extends Model
     public function users(){
         return $this->belongsToMany(User::class, 'treasury_user');
     }
+    public function orderTreasury()
+    {
+        return $this->hasOne(ShipOrderData::class, 'order_treasury');
+    }
     public function receivableTransactions()
     {
         return $this->hasMany(TreasuryTransactions::class, 'receivable_id');

@@ -23,6 +23,10 @@ class ShipOrderData extends Model
         'transfers_count',
     ];
 
+    public function orderTreasury()
+    {
+        return $this->hasOne(Treasury::class, 'order_treasury');
+    }
     public function transportReceipt()
     {
         return $this->hasMany(TransportReceipt::class, 'ship_order_id', 'id');
