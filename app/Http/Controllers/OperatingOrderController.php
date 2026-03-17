@@ -19,13 +19,18 @@ class OperatingOrderController extends Controller
     public function index()
     {
         $orders = OperatingOrder::with([
-            'shipOrderData' => function ($query) {
-                $query->select('*')->append('remainingPolicySlots');
-            },
+            'shipOrderData',
             'drivers.driver',
             'vehicles.vehicle',
             'torrentContainers.container',
         ])->latest()->get();
+
+        // Append remainingPolicySlots to each shipOrderData
+        $orders->each(function ($order) {
+            if ($order->shipOrderData) {
+                $order->shipOrderData->append('remainingPolicySlots');
+            }
+        });
 
         return response()->json($orders);
     }
