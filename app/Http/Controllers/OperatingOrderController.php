@@ -19,7 +19,6 @@ class OperatingOrderController extends Controller
     public function index()
     {
         $orders = OperatingOrder::with([
-            'shipOrderData',
             'shipOrderData.policies',
             'drivers.driver',
             'vehicles.vehicle',
