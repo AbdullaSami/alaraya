@@ -45,14 +45,34 @@ class TransportReceiptController extends Controller
                 'brokers' => 'nullable|numeric|min:0',
             ]);
 
+            $total = collect($validated)->only([
+                'army_scales',
+                'roads_and_bridges',
+                'road_cards',
+                'governorate_voucher',
+                'tips',
+                'official_receipts',
+                'overnight_leave',
+                'tarif_receipts',
+                'third_party_car_rental',
+                'customs_clearance',
+                'bill_of_lading_amendment',
+                'third_party_vehicle_leave',
+                'brokers',
+            ])->sum();
             $transportReceipt = TransportReceipt::create($validated);
 
+            $shipOrder = $transportReceipt->shipOrder;
+            $treasury = $shipOrder->treasuries()->first();
+            if ($treasury) {
+                $treasury->balance -= $total;
+                $treasury->save();
+            }
             return response()->json([
                 'success' => true,
                 'message' => 'Transport receipt created successfully',
                 'data' => $transportReceipt->load('shipOrder')
             ], 201);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -126,7 +146,6 @@ class TransportReceiptController extends Controller
                 'message' => 'Transport receipt updated successfully',
                 'data' => $transportReceipt->load('shipOrder')
             ]);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
