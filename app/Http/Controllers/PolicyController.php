@@ -108,6 +108,8 @@ class PolicyController extends Controller
             // ship order data and its related data
             'shipOrderData',
             'shipOrderData.shipLineClients',
+            'shipOrderData.shipLineClients.client',
+            'shipOrderData.shipLineClients.shippingLine',
             'shipOrderData.shipPolicies',
             'shipOrderData.shipBookings',
             'shipOrderData.shipContactData',
