@@ -51,6 +51,7 @@ class ReportsController extends Controller
                 ->where('order_number', 'LIKE', "%{$searchValue}%")
                 ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
                 ->with('operatingOrder')
+                ->with('operatingOrder.torrentContainers.container')
                 ->with('shipLineClients.client')
                 ->get();
             return response()->json(
