@@ -140,8 +140,8 @@ class ShipOrderDataController extends Controller
                     'transfers_count' => $validatedData['transfers_count'] ?? 1,
                 ]);
 
-                $user_treasury_id = auth()->user()->treasuries->pluck('id')->toArray();
-                if ($user_treasury_id > 1) {
+                $user_treasury_id = auth()->user()->treasuries()->pluck('id')->toArray();
+                if (count($user_treasury_id) > 1) {
                     $treasury_id = $validatedData['treasury_id'] ?? null;
                 } else {
                     $treasury_id = $user_treasury_id[0] ?? null;
