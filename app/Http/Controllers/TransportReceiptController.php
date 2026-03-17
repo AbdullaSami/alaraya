@@ -33,7 +33,7 @@ class TransportReceiptController extends Controller
                 'policy_id' => [
                     'nullable',
                     Rule::exists('policies', 'id')->where(function ($query) use ($request) {
-                        $query->where('ship_order_id', $request->ship_order_id);
+                        $query->where('ship_order_data_id', $request->ship_order_id);
                     }),
                 ],
                 'army_scales' => 'nullable|numeric|min:0',
