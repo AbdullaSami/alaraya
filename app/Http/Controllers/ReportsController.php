@@ -189,7 +189,7 @@ class ReportsController extends Controller
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
                     'transportReceipt' => $shipOrder->transportReceipt->flatMap(function($transportReceipt){
-                        return $transportReceipt->policy->map(function($policy) use ($transportReceipt){
+                        return $transportReceipt->policy->map(function($policy, $transportReceipt) {
                             return [
                                 'policy_number' => $policy->policy_number,
                                 'transport_receipt_details' => [
