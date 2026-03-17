@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('order_treasury', function (Blueprint $table) {
             $table->foreignId('treasury_id')->constrained()->cascadeOnDelete();
             $table->foreignId('ship_order_data_id')->constrained('ship_order_data')->onDelete('cascade');
+
+            $table->primary(['ship_order_data_id', 'treasury_id']);
         });
     }
 
