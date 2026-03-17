@@ -120,7 +120,7 @@ class ShipOrderDataController extends Controller
                 'clearance_data.redirect_location' => 'nullable|string',
                 'treasury_id' => 'nullable|integer|exists:treasuries,id',
             ]);
-            $userTreasuries = auth()->user()->treasuries()->pluck('id');
+            $userTreasuries = auth()->user()->treasuries()->pluck('treasury_id');
 
             $treasury_id = $userTreasuries->count() > 1
                 ? ($validatedData['treasury_id'] ?? null)
