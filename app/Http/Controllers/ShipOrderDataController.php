@@ -139,7 +139,8 @@ class ShipOrderDataController extends Controller
                     'transfers_count' => $validatedData['transfers_count'] ?? 1,
                 ]);
 
-                $shipOrderData->orderTreasury()->save($validatedData['treasury_id']);
+                $shipOrderData->treasuries()->associate($$validatedData['treasury_id']);
+                $shipOrderData->save();
                 // Create Ship Line Client
                 $shipLineClient = ShipLineClient::create([
                     'ship_order_data_id' => $shipOrderData->id,

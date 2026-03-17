@@ -23,9 +23,14 @@ class ShipOrderData extends Model
         'transfers_count',
     ];
 
-    public function orderTreasury()
+    public function treasuries()
     {
-        return $this->hasOne(Treasury::class, 'order_treasury');
+        return $this->belongsToMany(
+            Treasury::class,
+            'order_treasury',
+            'ship_order_data_id',
+            'treasury_id'
+        );
     }
     public function transportReceipt()
     {
@@ -55,7 +60,7 @@ class ShipOrderData extends Model
         return $this->hasOne(ShipContactData::class, 'ship_order_data_id');
     }
 
-        public function getShipOrderType()
+    public function getShipOrderType()
     {
         if ($this->shipPolicies()->exists()) {
             return $this->shipPolicies()->first();
@@ -65,7 +70,7 @@ class ShipOrderData extends Model
 
         return null;
     }
-       public function policies()
+    public function policies()
     {
         return $this->hasMany(Policy::class);
     }

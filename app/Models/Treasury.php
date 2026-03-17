@@ -15,12 +15,18 @@ class Treasury extends Model
         'balance',
     ];
 
-    public function users(){
+    public function users()
+    {
         return $this->belongsToMany(User::class, 'treasury_user');
     }
-    public function orderTreasury()
+    public function shipOrders()
     {
-        return $this->hasOne(ShipOrderData::class, 'order_treasury');
+        return $this->belongsToMany(
+            ShipOrderData::class,
+            'order_treasury',
+            'treasury_id',
+            'ship_order_data_id'
+        );
     }
     public function receivableTransactions()
     {
@@ -41,5 +47,4 @@ class Treasury extends Model
     {
         return $this->hasMany(TreasuryShiftHandle::class);
     }
-
 }
