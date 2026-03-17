@@ -126,6 +126,7 @@ class ShipOrderDataController extends Controller
                 // $orderNumber = $this->generateOrderNumber();
 
                 $user_treasury_id = auth()->user()->treasuries()->pluck('id')->toArray();
+                dd($user_treasury_id);
                 if (count($user_treasury_id) > 1) {
                     $treasury_id = $validatedData['treasury_id'] ?? null;
                 } else {
