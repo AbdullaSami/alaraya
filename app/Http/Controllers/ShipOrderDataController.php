@@ -122,6 +122,7 @@ class ShipOrderDataController extends Controller
             ]);
             $userTreasuries = auth()->user()->treasuries()->pluck('treasury_id');
 
+            dd($userTreasuries);
             $treasury_id = $userTreasuries->count() > 1
                 ? ($validatedData['treasury_id'] ?? null)
                 : $userTreasuries->first();
