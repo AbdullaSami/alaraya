@@ -27,7 +27,7 @@ class OperatingOrderController extends Controller
         ])->latest()->get();
 
         $orders->each(function($order) {
-    $order->shipOrderData->each->append('remaining_policy_slots');
+    $order->shipOrderData->each->append('remainingPolicySlots');
 });
 
         return response()->json($orders);
