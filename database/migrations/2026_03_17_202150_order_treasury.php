@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('order_treasury', function (Blueprint $table) {
-            $table->unsignedBigInteger('treasury_id')->nullable()->after('clearance_data');
-            $table->foreign('treasury_id')->references('id')->on('treasuries')->onDelete('set null');
+        Schema::create('order_treasury', function (Blueprint $table) {
+            $table->foreignId('treasury_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('ship_order_data_id')->constrained()->cascadeOnDelete();
         });
     }
 
