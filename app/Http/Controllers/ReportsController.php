@@ -188,7 +188,28 @@ class ReportsController extends Controller
                     'transfers_count' => $shipOrder->transfers_count,
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
-                    'transportReceipt' => $shipOrder->transportReceipt->policy,
+                    'transportReceipt' => $shipOrder->transportReceipt->flatMap(function($transportReceipt){
+                        return $transportReceipt->policy->map(function($policy) use ($transportReceipt){
+                            return [
+                                'policy_number' => $policy->policy_number,
+                                'transport_receipt_details' => [
+                                    'army_scales' => $transportReceipt->army_scales,
+                                    'roads_and_bridges' => $transportReceipt->roads_and_bridges,
+                                    'road_cards' => $transportReceipt->road_cards,
+                                    'governorate_voucher' => $transportReceipt->governorate_voucher,
+                                    'tips' => $transportReceipt->tips,
+                                    'official_receipts' => $transportReceipt->official_receipts,
+                                    'overnight_leave' => $transportReceipt->overnight_leave,
+                                    'tarif_receipts' => $transportReceipt->tarif_receipts,
+                                    'third_party_car_rental' => $transportReceipt->third_party_car_rental,
+                                    'customs_clearance' => $transportReceipt->customs_clearance,
+                                    'bill_of_lading_amendment' => $transportReceipt->bill_of_lading_amendment,
+                                    'third_party_vehicle_leave' => $transportReceipt->third_party_vehicle_leave,
+                                    'brokers' => $transportReceipt->brokers,
+                                ]
+                            ];
+                        });
+                    }),
                     'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function($policy) {
                         return $policy->vehicleDriverAssignments->map(function($assignment) {
                             return [
