@@ -14,7 +14,7 @@ class TransportReceiptController extends Controller
      */
     public function index(): JsonResponse
     {
-        $transportReceipts = TransportReceipt::with('shipOrder')->get();
+        $transportReceipts = TransportReceipt::with('shipOrder', 'policy')->get();
 
         return response()->json([
             'success' => true,
@@ -100,7 +100,7 @@ class TransportReceiptController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $transportReceipt = TransportReceipt::with('shipOrder')->findOrFail($id);
+            $transportReceipt = TransportReceipt::with('shipOrder', 'policy')->findOrFail($id);
 
             return response()->json([
                 'success' => true,
