@@ -50,6 +50,7 @@ class ReportsController extends Controller
             $report = ShipOrderData::query()
                 ->where('order_number', 'LIKE', "%{$searchValue}%")
                 ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
+                ->with('operatingOrder')
                 ->with('shipLineClients.client')
                 ->get();
             return response()->json(
