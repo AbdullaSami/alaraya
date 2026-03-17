@@ -27,9 +27,7 @@ class ShipOrderData extends Model
     {
         return $this->belongsToMany(
             Treasury::class,
-            'order_treasury',
-            'ship_order_data_id',
-            'treasury_id'
+            'order_treasury'
         );
     }
     public function transportReceipt()
