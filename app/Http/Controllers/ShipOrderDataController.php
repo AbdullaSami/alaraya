@@ -125,6 +125,12 @@ class ShipOrderDataController extends Controller
                 // Generate order number
                 // $orderNumber = $this->generateOrderNumber();
 
+                $user_treasury_id = auth()->user()->treasuries()->pluck('id')->toArray();
+                if (count($user_treasury_id) > 1) {
+                    $treasury_id = $validatedData['treasury_id'] ?? null;
+                } else {
+                    $treasury_id = $user_treasury_id[0] ?? null;
+                }
                 // Create Ship Order Data
                 $shipOrderData = ShipOrderData::create([
                     'order_number' => $validatedData['order_number'],
@@ -140,12 +146,6 @@ class ShipOrderDataController extends Controller
                     'transfers_count' => $validatedData['transfers_count'] ?? 1,
                 ]);
 
-                $user_treasury_id = auth()->user()->treasuries()->pluck('id')->toArray();
-                if (count($user_treasury_id) > 1) {
-                    $treasury_id = $validatedData['treasury_id'] ?? null;
-                } else {
-                    $treasury_id = $user_treasury_id[0] ?? null;
-                }
                 $shipOrderData->orderTreasury()->sync($treasury_id);
                 // Create Ship Line Client
                 $shipLineClient = ShipLineClient::create([
