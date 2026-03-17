@@ -188,8 +188,7 @@ class ReportsController extends Controller
                     'transfers_count' => $shipOrder->transfers_count,
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
-                    'transportReceipt' => $shipOrder->transportReceipt,
-                    'policies' => $shipOrder->policies,
+                    'transportReceipt' => $shipOrder->transportReceipt->policies,
                     'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function($policy) {
                         return $policy->vehicleDriverAssignments->map(function($assignment) {
                             return [
