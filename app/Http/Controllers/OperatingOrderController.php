@@ -26,9 +26,11 @@ class OperatingOrderController extends Controller
             'torrentContainers.container',
         ])->latest()->get();
 
-        $orders->each(function($order) {
-    $order->shipOrderData->each->append('remainingPolicySlots');
-});
+        $orders->each(function ($order) {
+            foreach ($order->shipOrderData->policies as $policy) {
+                $policy->remaining_policy_slots = max(0, $policy->transfers_count - $policy->policies()->count());
+            }
+        });
 
         return response()->json($orders);
     }
@@ -80,22 +82,22 @@ class OperatingOrderController extends Controller
             ]);
 
             // Operating Order Image
-            if($request->hasFile('operating_order_image')) {
+            if ($request->hasFile('operating_order_image')) {
                 $image = $request->file('operating_order_image')->store('operating_order_images', 'public');
                 $validatedData['operating_order_image'] = URL::to(Storage::url($image));
             }
             // operating_order_mail_image
-            if($request->hasFile('operating_order_mail_image')) {
+            if ($request->hasFile('operating_order_mail_image')) {
                 $image = $request->file('operating_order_mail_image')->store('operating_order_mail_images', 'public');
                 $validatedData['operating_order_mail_image'] = URL::to(Storage::url($image));
             }
             // torrents_image
-            if($request->hasFile('torrents_image')) {
+            if ($request->hasFile('torrents_image')) {
                 $image = $request->file('torrents_image')->store('torrents_images', 'public');
                 $validatedData['torrents_image'] = URL::to(Storage::url($image));
             }
             // release_and_assignment_image
-            if($request->hasFile('release_and_assignment_image')) {
+            if ($request->hasFile('release_and_assignment_image')) {
                 $image = $request->file('release_and_assignment_image')->store('release_and_assignment_images', 'public');
                 $validatedData['release_and_assignment_image'] = URL::to(Storage::url($image));
             }
@@ -236,22 +238,22 @@ class OperatingOrderController extends Controller
             ]);
 
             // Operating Order Image
-            if($request->hasFile('operating_order_image')) {
+            if ($request->hasFile('operating_order_image')) {
                 $image = $request->file('operating_order_image')->store('operating_order_images', 'public');
                 $validatedData['operating_order_image'] = URL::to(Storage::url($image));
             }
             // operating_order_mail_image
-            if($request->hasFile('operating_order_mail_image')) {
+            if ($request->hasFile('operating_order_mail_image')) {
                 $image = $request->file('operating_order_mail_image')->store('operating_order_mail_images', 'public');
                 $validatedData['operating_order_mail_image'] = URL::to(Storage::url($image));
             }
             // torrents_image
-            if($request->hasFile('torrents_image')) {
+            if ($request->hasFile('torrents_image')) {
                 $image = $request->file('torrents_image')->store('torrents_images', 'public');
                 $validatedData['torrents_image'] = URL::to(Storage::url($image));
             }
             // release_and_assignment_image
-            if($request->hasFile('release_and_assignment_image')) {
+            if ($request->hasFile('release_and_assignment_image')) {
                 $image = $request->file('release_and_assignment_image')->store('release_and_assignment_images', 'public');
                 $validatedData['release_and_assignment_image'] = URL::to(Storage::url($image));
             }
