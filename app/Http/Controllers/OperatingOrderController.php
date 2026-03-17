@@ -20,6 +20,7 @@ class OperatingOrderController extends Controller
     {
         $orders = OperatingOrder::with([
             'shipOrderData',
+            'shipOrderData.policies.remainingPolicySlots',
             'drivers.driver',
             'vehicles.vehicle',
             'torrentContainers.container',
