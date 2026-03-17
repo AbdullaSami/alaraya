@@ -22,7 +22,7 @@ class ShipOrderData extends Model
         'loading_way',
         'transfers_count',
     ];
-
+protected $appends = ['remaining_policy_slots'];
     public function treasuries()
     {
         return $this->belongsToMany(

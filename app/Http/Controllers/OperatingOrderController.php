@@ -25,12 +25,6 @@ class OperatingOrderController extends Controller
             'torrentContainers.container',
         ])->latest()->get();
 
-        $orders->each(function ($order) {
-            foreach ($order->shipOrderData->policies as $policy) {
-                $policy->remaining_policy_slots = max(0, $policy->transfers_count - $policy->policies()->count());
-            }
-        });
-
         return response()->json($orders);
     }
 
