@@ -20,11 +20,15 @@ class OperatingOrderController extends Controller
     {
         $orders = OperatingOrder::with([
             'shipOrderData',
-            'shipOrderData.policies.remainingPolicySlots',
+            'shipOrderData.policies',
             'drivers.driver',
             'vehicles.vehicle',
             'torrentContainers.container',
         ])->latest()->get();
+
+        $orders->each(function($order) {
+    $order->shipOrderData->policies->each->append('remaining_policy_slots');
+});
 
         return response()->json($orders);
     }
