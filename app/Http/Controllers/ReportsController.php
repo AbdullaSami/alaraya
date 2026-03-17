@@ -106,6 +106,7 @@ class ReportsController extends Controller
                 'operatingOrder',
                 'policies.vehicleDriverAssignments.vehicle',
                 'policies.vehicleDriverAssignments.driver',
+                'policies.transportReceipts',
                 'transportReceipt']);
 
             $number = $request->number;
