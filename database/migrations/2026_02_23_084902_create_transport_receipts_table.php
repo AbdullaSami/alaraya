@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('transport_receipts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ship_order_id')->constrained('ship_order_data')->cascadeOnDelete();
+            $table->foreignId('policy_id')->constrained('policies')->cascadeOnDelete();
             $table->decimal('army_scales')->nullable();
             $table->decimal('roads_and_bridges')->nullable();
             $table->decimal('road_cards')->nullable();

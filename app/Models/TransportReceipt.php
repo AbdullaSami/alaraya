@@ -11,6 +11,7 @@ class TransportReceipt extends Model
 
     protected $fillable = [
         'ship_order_id',
+        'policy_id',
         'army_scales',
         'roads_and_bridges',
         'road_cards',
@@ -32,5 +33,13 @@ class TransportReceipt extends Model
     public function shipOrder()
     {
         return $this->belongsTo(ShipOrderData::class, 'ship_order_id');
+    }
+
+    /**
+     * Relationship: Expense belongs to Ship Policy
+     */
+    public function policy()
+    {
+        return $this->belongsTo(Policy::class, 'policy_id');
     }
 }

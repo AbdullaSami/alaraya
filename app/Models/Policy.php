@@ -25,6 +25,10 @@ class Policy extends Model
         'policy_loading_date' => 'string',
     ];
 
+    public function transportReceipts()
+    {
+        return $this->hasMany(TransportReceipt::class);
+    }
     public function shipOrderData()
     {
         return $this->belongsTo(ShipOrderData::class);
