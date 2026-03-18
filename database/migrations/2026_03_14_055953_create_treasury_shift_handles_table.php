@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('treasury_id')->constrained('treasuries')->onDelete('cascade');
+            $table->decimal('amount', 15, 2);
             $table->enum('action', ['open', 'close']);
             $table->timestamps();
         });

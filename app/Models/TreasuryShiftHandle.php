@@ -12,6 +12,7 @@ class TreasuryShiftHandle extends Model
     protected $fillable = [
         'treasury_id',
         'user_id',
+        'amount',
         'action',
     ];
 

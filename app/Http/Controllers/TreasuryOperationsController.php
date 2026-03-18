@@ -181,10 +181,12 @@ class TreasuryOperationsController extends Controller
                 return response()->json(['error' => 'User not authenticated'], 401);
             }
 
+            $treasury = Treasury::findOrFail($validatedData['treasury_id']);
             // Create a new shift handle record
             $shiftHandle = new TreasuryShiftHandle();
             $shiftHandle->treasury_id = $validatedData['treasury_id'];
             $shiftHandle->user_id = $validatedData['user_id'];
+            $shiftHandle->amount = $treasury->amount ?? 0;
             $shiftHandle->action = $validatedData['action'];
             $shiftHandle->save();
 
