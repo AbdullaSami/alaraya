@@ -348,13 +348,13 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['policies'] as $policyData) {
 
-                        $policy = ShipPolicy::create([
+                        $policy = ShipPolicy::updateOrCreate([
                             'ship_order_data_id' => $shipOrderData->id,
                             'policy_number' => $policyData['policy_number'],
                         ]);
 
                         foreach ($policyData['containers'] as $containerData) {
-                            ShipContainersDetail::create([
+                            ShipContainersDetail::updateOrCreate([
                                 'policy_id' => $policy->id,
                                 'container_number' => $containerData['container_number'],
                             ]);
@@ -369,20 +369,20 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['bookings'] as $bookingData) {
 
-                        $booking = ShipBooking::create([
+                        $booking = ShipBooking::updateOrCreate([
                             'ship_order_data_id' => $shipOrderData->id,
                             'booking_number' => $bookingData['booking_number'],
                         ]);
 
                         foreach ($bookingData['containers'] as $containerData) {
-                            ShipContainersDetail::create([
+                            ShipContainersDetail::updateOrCreate([
                                 'booking_id' => $booking->id,
                                 'container_number' => $containerData['container_number'],
                             ]);
                         }
 
                         if (!empty($validatedData['clearance_data'])) {
-                            ClearanceData::create([
+                            ClearanceData::updateOrCreate([
                                 'booking_id' => $booking->id,
                                 'clearance_type' => $validatedData['clearance_data']['clearance_type'] ?? null,
                                 'customs_location' => $validatedData['clearance_data']['customs_location'] ?? null,
