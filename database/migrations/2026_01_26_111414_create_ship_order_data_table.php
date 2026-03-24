@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('loading_way')->nullable();
             $table->unsignedBigInteger('transfers_count')->default(1);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
