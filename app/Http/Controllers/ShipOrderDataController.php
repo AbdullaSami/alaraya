@@ -356,10 +356,10 @@ class ShipOrderDataController extends Controller
                                 'ship_order_data_id' => $shipOrderData->id,
                                 'policy_number' => $policyData['policy_number'],
                             ]);
-                            dd("is new");
-                        } else {
-                            // Use existing policy
-                            $policy = $existingPolicy;
+                            } else {
+                                // Use existing policy
+                                $policy = $existingPolicy;
+                                dd("is new");
                         }
 
                         foreach ($policyData['containers'] as $containerData) {
