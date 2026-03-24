@@ -350,7 +350,7 @@ class ShipOrderDataController extends Controller
 
                         $policy = ShipPolicy::updateOrCreate(
                             [
-                                'id' => $policyData['id']
+                                'policy_number' => $policyData['policy_number']
                             ],
                             [
                                 'ship_order_data_id' => $shipOrderData->id,
@@ -376,7 +376,7 @@ class ShipOrderDataController extends Controller
 
                         $booking = ShipBooking::updateOrCreate(
                             [
-                                'id' => $bookingData['id']
+                                'booking_number' => $bookingData['booking_number']
                             ],
                             [
                                 'ship_order_data_id' => $shipOrderData->id,
