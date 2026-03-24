@@ -50,7 +50,7 @@ class TreasuryController extends Controller
     public function show(Treasury $treasury)
     {
         try {
-            $treasury->load('receivableTransactions', 'payableTransactions', 'deductions', 'shiftHandles');
+            $treasury->load('receivableTransactions', 'payableTransactions', 'deductions', 'shiftHandles', 'shiftHandles.user');
             return response()->json($treasury);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
