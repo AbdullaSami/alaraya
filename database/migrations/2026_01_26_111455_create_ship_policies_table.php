@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('ship_order_data_id')->constrained('ship_order_data')->onDelete('cascade');
             $table->string('policy_number')->unique();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OperatingOrder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'ship_order_data_id',

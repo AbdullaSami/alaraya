@@ -30,7 +30,6 @@ return new class extends Migration
             $table->text('release_and_assignment_requirements')->nullable();
 
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

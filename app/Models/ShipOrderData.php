@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShipOrderData extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'order_number',
