@@ -27,7 +27,7 @@ class AuthController extends Controller
                 'email'         => 'required|string|email|max:255|unique:users,email',
                 'password'      => 'required|string|min:8',
                 'phone_number'  => 'required|string|max:20',
-                'role'          => 'sometimes|string|in:admin,operations,data_entry',
+                'role'          => 'sometimes|string',
                 'permissions'   => 'sometimes|array',
                 'permissions.*' => 'exists:permissions,name',
                 'treasury_id'   => 'nullable|array',
