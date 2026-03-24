@@ -182,15 +182,6 @@ class OperatingOrderController extends Controller
         return response()->json($order);
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
     /**
      * Update the specified resource in storage.
      */
