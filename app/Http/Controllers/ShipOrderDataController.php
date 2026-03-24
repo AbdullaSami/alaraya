@@ -348,19 +348,12 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['policies'] as $policyData) {
 
-                        // Check if policy number already exists globally
-                        $existingPolicy = ShipPolicy::where('policy_number', $policyData['policy_number'])->first();
-
-                        dd($policyData['policy_number'], $existingPolicy);
-                        if ($existingPolicy == null) {
-                            $policy = ShipPolicy::create([
+                        $policy = ShipPolicy::updateOrCreate(
+                            [
                                 'ship_order_data_id' => $shipOrderData->id,
                                 'policy_number' => $policyData['policy_number'],
-                            ]);
-                            } else {
-                                // Use existing policy
-                                $policy = $existingPolicy;
-                        }
+                            ]
+                        );
 
                         foreach ($policyData['containers'] as $containerData) {
                             ShipContainersDetail::create([
@@ -378,18 +371,10 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['bookings'] as $bookingData) {
 
-                        // Check if booking number already exists globally
-                        $existingBooking = ShipBooking::where('booking_number', $bookingData['booking_number'])->first();
-
-                        if (!$existingBooking) {
-                            $booking = ShipBooking::create([
-                                'ship_order_data_id' => $shipOrderData->id,
-                                'booking_number' => $bookingData['booking_number'],
-                            ]);
-                        } else {
-                            // Use existing booking
-                            $booking = $existingBooking;
-                        }
+                        $booking = ShipBooking::updateOrCreate([
+                            'ship_order_data_id' => $shipOrderData->id,
+                            'booking_number' => $bookingData['booking_number'],
+                        ]);
 
                         foreach ($bookingData['containers'] as $containerData) {
                             ShipContainersDetail::create([
