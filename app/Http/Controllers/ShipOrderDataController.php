@@ -348,10 +348,14 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['policies'] as $policyData) {
 
-                        $policy = ShipPolicy::updateOrCreate([
-                            'ship_order_data_id' => $shipOrderData->id,
-                            'policy_number' => $policyData['policy_number'],
-                        ]);
+                        $policy = ShipPolicy::updateOrCreate(
+                            [
+                                'policy_number' => $policyData['policy_number'], // ONLY this
+                            ],
+                            [
+                                'ship_order_data_id' => $shipOrderData->id,
+                            ]
+                        );
 
                         foreach ($policyData['containers'] as $containerData) {
                             ShipContainersDetail::create([
@@ -370,7 +374,8 @@ class ShipOrderDataController extends Controller
                     foreach ($validatedData['bookings'] as $bookingData) {
 
                         $booking = ShipBooking::updateOrCreate([
-                            'ship_order_data_id' => $shipOrderData->id,
+                            'ship_order_data_id' => $shipOrderData->id
+                        ], [
                             'booking_number' => $bookingData['booking_number'],
                         ]);
 
