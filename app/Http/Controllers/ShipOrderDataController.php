@@ -351,8 +351,8 @@ class ShipOrderDataController extends Controller
                         // Check if policy number already exists globally
                         $existingPolicy = ShipPolicy::where('policy_number', $policyData['policy_number'])->first();
 
-                        if (!$existingPolicy) {
-                            dd($existingPolicy);
+                        dd($existingPolicy);
+                        if ($existingPolicy == null) {
                             $policy = ShipPolicy::create([
                                 'ship_order_data_id' => $shipOrderData->id,
                                 'policy_number' => $policyData['policy_number'],
