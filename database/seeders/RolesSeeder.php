@@ -21,8 +21,11 @@ class RolesSeeder extends Seeder
 
         // Create roles safely
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $operationsRole = Role::firstOrCreate(['name' => 'operations']);
-        $dataEntryRole = Role::firstOrCreate(['name' => 'data_entry']);
+        $operationsRole = Role::firstOrCreate(['name' => 'مدير تشغيل']);
+        $dataEntryRole = Role::firstOrCreate(['name' => 'مدير تنفيذ']);
+        $dataEntryRole = Role::firstOrCreate(['name' => 'مندوب تشغيل']);
+        $dataEntryRole = Role::firstOrCreate(['name' => 'محاسب']);
+        $dataEntryRole = Role::firstOrCreate(['name' => 'مدير حسابات']);
 
         // System models
         $models = [
