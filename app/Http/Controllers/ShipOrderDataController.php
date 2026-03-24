@@ -352,7 +352,7 @@ class ShipOrderDataController extends Controller
                         $existingPolicy = ShipPolicy::where('policy_number', $policyData['policy_number'])->first();
 
                         if (!$existingPolicy) {
-                            dd("is new");
+                            dd($existingPolicy);
                             $policy = ShipPolicy::create([
                                 'ship_order_data_id' => $shipOrderData->id,
                                 'policy_number' => $policyData['policy_number'],
