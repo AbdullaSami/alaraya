@@ -356,7 +356,7 @@ class ShipOrderDataController extends Controller
                         );
 
                         foreach ($policyData['containers'] as $containerData) {
-                            ShipContainersDetail::create([
+                            ShipContainersDetail::updateOrCreate([
                                 'policy_id' => $policy->id,
                                 'container_number' => $containerData['container_number'],
                             ]);
@@ -377,7 +377,7 @@ class ShipOrderDataController extends Controller
                         ]);
 
                         foreach ($bookingData['containers'] as $containerData) {
-                            ShipContainersDetail::create([
+                            ShipContainersDetail::updateOrCreate([
                                 'booking_id' => $booking->id,
                                 'container_number' => $containerData['container_number'],
                             ]);
