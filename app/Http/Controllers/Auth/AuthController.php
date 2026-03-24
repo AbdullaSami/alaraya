@@ -105,7 +105,7 @@ class AuthController extends Controller
                 $user->syncPermissions($validatedData['permissions']);
             }
             if (isset($validatedData['treasury_id'])) {
-                $user->treasuries()->sync([$validatedData['treasury_id']]);
+                $user->treasuries()->sync($validatedData['treasury_id']);
             }
             return response()->json(['message' => 'User updated successfully', 'user' => $user], 200);
         } catch (\Exception $e) {
