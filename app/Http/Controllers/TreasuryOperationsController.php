@@ -186,7 +186,7 @@ class TreasuryOperationsController extends Controller
             $shiftHandle = new TreasuryShiftHandle();
             $shiftHandle->treasury_id = $validatedData['treasury_id'];
             $shiftHandle->user_id = $validatedData['user_id'];
-            $shiftHandle->amount = $treasury->amount ?? 0;
+            $shiftHandle->balance = $treasury->amount ?? 0;
             $shiftHandle->action = $validatedData['action'];
             $shiftHandle->save();
 
