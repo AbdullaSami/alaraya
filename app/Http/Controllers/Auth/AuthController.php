@@ -85,7 +85,7 @@ class AuthController extends Controller
                 'email'         => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
                 'password'      => 'sometimes|string|min:8',
                 'phone_number'  => 'sometimes|string|max:20',
-                'role'          => 'sometimes|string|in:admin,operations,data_entry',
+                'role'          => 'sometimes|string',
                 'permissions'   => 'sometimes|array',
                 'permissions.*' => 'exists:permissions,name',
                 'treasury_id'   => 'nullable|array',
