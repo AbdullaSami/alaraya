@@ -350,6 +350,9 @@ class ShipOrderDataController extends Controller
 
                         $policy = ShipPolicy::firstOrCreate(
                             [
+                                'id'
+                            ],
+                            [
                                 'ship_order_data_id' => $shipOrderData->id,
                                 'policy_number' => $policyData['policy_number'],
                             ]
@@ -371,10 +374,15 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['bookings'] as $bookingData) {
 
-                        $booking = ShipBooking::firstOrCreate([
-                            'ship_order_data_id' => $shipOrderData->id,
-                            'booking_number' => $bookingData['booking_number'],
-                        ]);
+                        $booking = ShipBooking::firstOrCreate(
+                            [
+                                'id'
+                            ],
+                            [
+                                'ship_order_data_id' => $shipOrderData->id,
+                                'booking_number' => $bookingData['booking_number'],
+                            ]
+                        );
 
                         foreach ($bookingData['containers'] as $containerData) {
                             ShipContainersDetail::create([
