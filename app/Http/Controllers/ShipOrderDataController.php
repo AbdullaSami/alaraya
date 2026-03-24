@@ -348,7 +348,7 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['policies'] as $policyData) {
 
-                        $policy = ShipPolicy::firstOrCreate(
+                        $policy = ShipPolicy::updateOrCreate(
                             [
                                 'id'
                             ],
@@ -374,7 +374,7 @@ class ShipOrderDataController extends Controller
 
                     foreach ($validatedData['bookings'] as $bookingData) {
 
-                        $booking = ShipBooking::firstOrCreate(
+                        $booking = ShipBooking::updateOrCreate(
                             [
                                 'id'
                             ],
