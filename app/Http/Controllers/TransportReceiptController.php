@@ -75,7 +75,7 @@ class TransportReceiptController extends Controller
                 $treasury->save();
 
                 $treasury->deductions()->create([
-                    'user_id' => auth()->id(),
+                    'user_id' => auth()->user()->id,
                     'treasury_id' => $treasury->id,
                     'amount' => $total,
                     'reason' => 'Transport receipt expenses for ship order #' . $shipOrder->order_number,
