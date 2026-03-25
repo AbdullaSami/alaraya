@@ -97,7 +97,8 @@ class TransportReceiptController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create transport receipt',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
             ], 500);
         }
     }
