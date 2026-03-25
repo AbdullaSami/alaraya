@@ -25,11 +25,10 @@ class TransportReceiptController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         $userId = auth()->user()->id;
         try {
-
             $validated = $request->validate([
                 'ship_order_id' => 'required|exists:ship_order_data,id',
                 'policy_id' => [
