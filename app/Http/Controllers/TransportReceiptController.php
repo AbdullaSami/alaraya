@@ -27,7 +27,9 @@ class TransportReceiptController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $userId = auth()->user()->id;
         try {
+
             $validated = $request->validate([
                 'ship_order_id' => 'required|exists:ship_order_data,id',
                 'policy_id' => [
@@ -75,7 +77,7 @@ class TransportReceiptController extends Controller
                 $treasury->save();
 
                 $treasury->deductions()->create([
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $userId,
                     'amount' => $total,
                     'reason' => 'Transport receipt expenses for ship order #' . $shipOrder->order_number,
                     'type' => 'transport_receipt',
