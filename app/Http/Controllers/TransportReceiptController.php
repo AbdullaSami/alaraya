@@ -28,6 +28,7 @@ class TransportReceiptController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            $user = auth()->user();
             $validated = $request->validate([
                 'ship_order_id' => 'required|exists:ship_order_data,id',
                 'policy_id' => [
@@ -71,11 +72,10 @@ class TransportReceiptController extends Controller
             $shipOrder = $transportReceipt->shipOrder;
             $treasury = $shipOrder->treasuries()->first();
             if ($treasury) {
-                $treasury->balance -= $total;
-                $treasury->save();
+                $treasury->decrement('balance', $total);
 
                 $treasury->deductions()->create([
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $user->id,
                     'treasury_id' => $treasury->id,
                     'amount' => $total,
                     'reason' => 'Transport receipt expenses for ship order #' . $shipOrder->order_number,
