@@ -64,12 +64,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/treasury/send', [TreasuryOperationsController::class, 'send']);
     Route::post('/treasury/deduction', [TreasuryOperationsController::class, 'deduction']);
     Route::post('/treasury/shift-handle', [TreasuryOperationsController::class, 'shiftHandle']);
-    
-    // Handel policies data methods
-    Route::apiResource('/policies', PolicyController::class);
+    // Handle Transport Receipt
+    Route::apiResource('/transport-receipts', TransportReceiptController::class);
 });
-// Handle Transport Receipt
-Route::apiResource('/transport-receipts', TransportReceiptController::class);
 
 // Ship order number generation
 Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
@@ -79,6 +76,9 @@ Route::apiResource('/ship-order-data', ShipOrderDataController::class);
 
 // Handel Operating orders data methods
 Route::apiResource('/operating-orders', OperatingOrderController::class);
+
+// Handel policies data methods
+Route::apiResource('/policies', PolicyController::class);
 
 // Policy number generation
 Route::get('/policy-number', [PolicyController::class, 'generatePolicyNumber']);
