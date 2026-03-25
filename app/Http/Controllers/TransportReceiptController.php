@@ -28,7 +28,6 @@ class TransportReceiptController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $user = auth()->user();
             $validated = $request->validate([
                 'ship_order_id' => 'required|exists:ship_order_data,id',
                 'policy_id' => [
@@ -72,10 +71,11 @@ class TransportReceiptController extends Controller
             $shipOrder = $transportReceipt->shipOrder;
             $treasury = $shipOrder->treasuries()->first();
             if ($treasury) {
-                $treasury->decrement('balance', $total);
+                $treasury->balance -= $total;
+                $treasury->save();
 
                 $treasury->deductions()->create([
-                    'user_id' => $user->id,
+                    'user_id' => auth()->user()->id,
                     'amount' => $total,
                     'reason' => 'Transport receipt expenses for ship order #' . $shipOrder->order_number,
                     'type' => 'transport_receipt',
@@ -96,8 +96,7 @@ class TransportReceiptController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create transport receipt',
-                'error' => $e->getMessage(),
-                'user_id' => $user->id
+                'error' => $e->getMessage()
             ], 500);
         }
     }
