@@ -19,6 +19,7 @@ class PolicyController extends Controller
             'shipOrderData.shipPolicies',
             'shipOrderData.shipPolicies.shipContainersDetails',
             'shipOrderData.shipBookings',
+            'shipOrderData.shipBookings.clearanceData',
             'shipOrderData.shipBookings.shipContainersDetails',
             'shipOrderData.shipContactData',
             // operating order and its related data
@@ -113,6 +114,7 @@ class PolicyController extends Controller
             'shipOrderData.shipLineClients.destination',
             'shipOrderData.shipPolicies',
             'shipOrderData.shipBookings',
+            'shipOrderData.shipBookings.clearanceData',
             'shipOrderData.shipContactData',
             // operating order and its related data
             'operatingOrder',
