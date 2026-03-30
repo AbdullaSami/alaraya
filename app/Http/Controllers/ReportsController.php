@@ -251,5 +251,28 @@ class ReportsController extends Controller
         }
     }
 
+    public function vehicleStatement(){
+        try {
+                $vehicles = ShipOrderData::with([
+                    'policies',
+                    'policies.transportReceipts',
+                    'policies.vehicleDriverAssignments',
+                    'policies.vehicleDriverAssignments.vehicle',
+                    'policies.vehicleDriverAssignments.driver',
+                    'shipLineClients.client'
+                ])->get();
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $vehicles
+                ], 200);
+            } catch (\Throwable $th) {
+                return response()->json([
+                    'error' => 'Failed to generate vehicle statement',
+                    'message' => $th->getMessage()
+                ], 500);
+            }
+    }
+
 
 }
