@@ -22,6 +22,7 @@ class ShipOrderData extends Model
         'containers_number',
         'loading_way',
         'transfers_count',
+        'handel_way',
     ];
     public function treasuries()
     {
