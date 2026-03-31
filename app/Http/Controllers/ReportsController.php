@@ -183,6 +183,18 @@ class ReportsController extends Controller
                 $shipOrdersDetails[] = [
                     'order_number' => $shipOrder->order_number,
                     'order_type' => $shipOrder->order_type,
+                    'orderBooking' => $shipOrder->shipBookings->map(function ($booking) {
+                        return [
+                            'booking_number' => $booking->booking_number,
+                            'booking_date' => $booking->booking_date,
+                        ]?? null;
+                    }),
+                    'orderPolicy' => $shipOrder->shipPolicies->map(function ($policy) {
+                        return [
+                            'policy_number' => $policy->policy_number,
+                            'policy_date' => $policy->policy_date,
+                        ]?? null;
+                    }),
                     'noloans' => $noloans,
                     'shipping_date' => $shipOrder->shipping_date,
                     'aging_date' => $shipOrder->aging_date,
