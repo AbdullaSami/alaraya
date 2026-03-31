@@ -100,4 +100,4 @@ Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleRepor
 Route::get('/reports/torrents/{number}', [ReportsController::class, 'torrentsReports']);
 Route::get('/reports/loading-withdrawal/{number}', [ReportsController::class, 'LoadingWithdrawalReport']);
 Route::get('/reports/client-account-statements', [ReportsController::class, 'clientAccountStatements']);
-Route::get('/reports/vehicleStatements', [ReportsController::class, 'vehicleStatements']);
+Route::get('/reports/vehicle-statements', [ReportsController::class, 'vehicleStatements']);
