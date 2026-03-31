@@ -98,17 +98,21 @@ class ReportsController extends Controller
         }
     }
 
-    public function clientAccountStatements(Request $request){
+    public function clientAccountStatements(Request $request)
+    {
         try {
             // Search ship orders by order number and/or client name
             $query = ShipOrderData::with([
+                'shipPolicies',
+                'shipBookings',
                 'shipLineClients.client',
                 'operatingOrder',
                 'policies.vehicleDriverAssignments.vehicle',
                 'policies.vehicleDriverAssignments.driver',
                 'policies.transportReceipts',
                 'policies',
-                'transportReceipt']);
+                'transportReceipt'
+            ]);
 
             $number = $request->number;
             $clientName = $request->clientName;
@@ -119,7 +123,7 @@ class ReportsController extends Controller
             }
 
             if (!empty($clientName)) {
-                $query->whereHas('shipLineClients.client', function($query) use ($clientName) {
+                $query->whereHas('shipLineClients.client', function ($query) use ($clientName) {
                     $query->where('client_name', 'LIKE', "%{$clientName}%");
                 });
             }
@@ -189,28 +193,28 @@ class ReportsController extends Controller
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
                     'transportReceipt' => $shipOrder->transportReceipt->map(function ($transportReceipt) {
-                            $policy = $transportReceipt->policy;
-                            return [
-                                'policy_number' => $policy->policy_number,
-                                'transport_receipt_details' => [
-                                    'army_scales' => $transportReceipt->army_scales,
-                                    'roads_and_bridges' => $transportReceipt->roads_and_bridges,
-                                    'road_cards' => $transportReceipt->road_cards,
-                                    'governorate_voucher' => $transportReceipt->governorate_voucher,
-                                    'tips' => $transportReceipt->tips,
-                                    'official_receipts' => $transportReceipt->official_receipts,
-                                    'overnight_leave' => $transportReceipt->overnight_leave,
-                                    'tarif_receipts' => $transportReceipt->tarif_receipts,
-                                    'third_party_car_rental' => $transportReceipt->third_party_car_rental,
-                                    'customs_clearance' => $transportReceipt->customs_clearance,
-                                    'bill_of_lading_amendment' => $transportReceipt->bill_of_lading_amendment,
-                                    'third_party_vehicle_leave' => $transportReceipt->third_party_vehicle_leave,
-                                    'brokers' => $transportReceipt->brokers,
-                                ]
-                            ];
-                        }),
-                    'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function($policy) {
-                        return $policy->vehicleDriverAssignments->map(function($assignment) {
+                        $policy = $transportReceipt->policy;
+                        return [
+                            'policy_number' => $policy->policy_number,
+                            'transport_receipt_details' => [
+                                'army_scales' => $transportReceipt->army_scales,
+                                'roads_and_bridges' => $transportReceipt->roads_and_bridges,
+                                'road_cards' => $transportReceipt->road_cards,
+                                'governorate_voucher' => $transportReceipt->governorate_voucher,
+                                'tips' => $transportReceipt->tips,
+                                'official_receipts' => $transportReceipt->official_receipts,
+                                'overnight_leave' => $transportReceipt->overnight_leave,
+                                'tarif_receipts' => $transportReceipt->tarif_receipts,
+                                'third_party_car_rental' => $transportReceipt->third_party_car_rental,
+                                'customs_clearance' => $transportReceipt->customs_clearance,
+                                'bill_of_lading_amendment' => $transportReceipt->bill_of_lading_amendment,
+                                'third_party_vehicle_leave' => $transportReceipt->third_party_vehicle_leave,
+                                'brokers' => $transportReceipt->brokers,
+                            ]
+                        ];
+                    }),
+                    'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function ($policy) {
+                        return $policy->vehicleDriverAssignments->map(function ($assignment) {
                             return [
                                 'id' => $assignment->id,
                                 'vehicle_info' => $assignment->vehicle ?? null,
@@ -218,7 +222,7 @@ class ReportsController extends Controller
                             ];
                         });
                     })->unique('id')->values(),
-                    'clients' => $shipOrder->shipLineClients->map(function($shipLineClient) {
+                    'clients' => $shipOrder->shipLineClients->map(function ($shipLineClient) {
                         return [
                             'client_name' => $shipLineClient->client->client_name ?? null,
                             'contact_number' => $shipLineClient->client->contact_number ?? null,
@@ -242,7 +246,6 @@ class ReportsController extends Controller
                     'net_amount' => $netAmount
                 ]
             ], 200);
-
         } catch (\Throwable $th) {
             return response()->json([
                 'error' => 'Failed to generate client account statements',
@@ -251,28 +254,32 @@ class ReportsController extends Controller
         }
     }
 
-    public function vehicleStatement(){
+    public function vehicleStatement()
+    {
         try {
-                $vehicles = ShipOrderData::with([
-                    'policies',
-                    'policies.transportReceipts',
-                    'policies.vehicleDriverAssignments',
-                    'policies.vehicleDriverAssignments.vehicle',
-                    'policies.vehicleDriverAssignments.driver',
-                    'shipLineClients.client'
-                ])->get();
+            $vehicles = ShipOrderData::with([
+                'policies',
+                'policies.transportReceipts',
+                'policies.vehicleDriverAssignments',
+                'policies.vehicleDriverAssignments.vehicle',
+                'policies.vehicleDriverAssignments.driver',
+                'shipLineClients.client'
+            ])->get();
 
-                return response()->json([
-                    'success' => true,
-                    'data' => $vehicles
-                ], 200);
-            } catch (\Throwable $th) {
-                return response()->json([
-                    'error' => 'Failed to generate vehicle statement',
-                    'message' => $th->getMessage()
-                ], 500);
-            }
+            return response()->json([
+                'success' => true,
+                'data' => $vehicles
+            ], 200);
+        } catch (\Throwable $th) {
+            \Log::error('Vehicle Statement Error:', [
+                'message' => $th->getMessage(),
+                'trace' => $th->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to generate vehicle statement',
+                'message' => $th->getMessage()
+            ], 500);
+        }
     }
-
-
 }
