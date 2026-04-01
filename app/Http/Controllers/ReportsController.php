@@ -296,7 +296,8 @@ class ReportsController extends Controller
                     ]);
                 },
                 'shipLineClients.client',
-                'shipLineClients.shippingLine'
+                'shipLineClients.shippingLine',
+                'shipLineClients.destination'
             ])->get();
 
             return response()->json([
