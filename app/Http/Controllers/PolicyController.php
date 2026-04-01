@@ -74,6 +74,7 @@ class PolicyController extends Controller
             'policy_loading_date'
         ]);
 
+        $policyData['user_id'] = auth()->id(); // Assuming you want to associate the policy with the authenticated user
         $policy = Policy::create($policyData);
 
         // Create vehicle driver assignments with multiple containers

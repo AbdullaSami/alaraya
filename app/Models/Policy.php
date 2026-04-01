@@ -10,6 +10,7 @@ class Policy extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'ship_order_data_id',
         'operating_order_id',
         'policy_number',
@@ -25,6 +26,10 @@ class Policy extends Model
         'policy_loading_date' => 'string',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
     public function transportReceipts()
     {
         return $this->hasMany(TransportReceipt::class);
