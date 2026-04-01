@@ -79,6 +79,7 @@ class PolicyController extends Controller
 
         // Create vehicle driver assignments with multiple containers
         $assignments = [];
+        if (isset($validated['vehicle_driver_assignments'])) {
         foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
             $assignment = VehicleDriverAssignment::create([
                 'vehicle_id' => $assignmentData['vehicle_id'],
@@ -86,12 +87,10 @@ class PolicyController extends Controller
                 'policy_id' => $policy->id,
             ]);
 
-            if (isset($assignmentData['ship_container_ids'])) {
                 // Attach multiple ship containers to the assignment
                 $assignment->syncShipContainers($assignmentData['ship_container_ids']);
-            }
-
             $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
+        }
         }
 
         return response()->json([
