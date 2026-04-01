@@ -29,7 +29,8 @@ class ShipOrderDataController extends Controller
             'shipPolicies.shipContainersDetails',
             'shipBookings.shipContainersDetails',
             'shipBookings.clearanceData',
-            'shipContactData'
+            'shipContactData',
+            'treasuries'
         ])
             ->latest()
             ->paginate($request->get('per_page', 15));
@@ -243,7 +244,8 @@ class ShipOrderDataController extends Controller
             'shipPolicies.shipContainersDetails',
             'shipBookings.shipContainersDetails',
             'shipBookings.clearanceData',
-            'shipContactData'
+            'shipContactData',
+            'treasuries'
         ])->findOrFail($id);
 
         return response()->json([
