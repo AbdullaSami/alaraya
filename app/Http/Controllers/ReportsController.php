@@ -187,13 +187,13 @@ class ReportsController extends Controller
                         return [
                             'booking_number' => $booking->booking_number,
                             'booking_date' => $booking->booking_date,
-                        ]?? null;
+                        ] ?? null;
                     }),
                     'orderPolicy' => $shipOrder->shipPolicies->map(function ($policy) {
                         return [
                             'policy_number' => $policy->policy_number,
                             'policy_date' => $policy->policy_date,
-                        ]?? null;
+                        ] ?? null;
                     }),
                     'noloans' => $noloans,
                     'shipping_date' => $shipOrder->shipping_date,
@@ -266,16 +266,36 @@ class ReportsController extends Controller
         }
     }
 
-    public function vehicleStatement()
+    public function vehicleStatement(Request $request)
     {
         try {
             $vehicles = ShipOrderData::with([
-                'policies',
-                'policies.transportReceipts',
-                'policies.vehicleDriverAssignments',
-                'policies.vehicleDriverAssignments.vehicle',
-                'policies.vehicleDriverAssignments.driver',
-                'shipLineClients.client'
+                'policies' => function ($query) use ($request) {
+
+                    // فلترة بتاريخ الإنشاء
+                    if ($request->filled('from_date') && $request->filled('to_date')) {
+                        $query->whereBetween('created_at', [
+                            $request->from_date,
+                            $request->to_date
+                        ]);
+                    }
+
+                    // فلترة برقم العربية (داخل العلاقة)
+                    if ($request->filled('vehicle_number')) {
+                        $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
+                            $q->where('vehicle_number', $request->vehicle_number);
+                        });
+                    }
+
+                    $query->with([
+                        'transportReceipts',
+                        'vehicleDriverAssignments',
+                        'vehicleDriverAssignments.vehicle',
+                        'vehicleDriverAssignments.driver',
+                    ]);
+                },
+                'shipLineClients.client',
+                'shipLineClients.shippingLine'
             ])->get();
 
             return response()->json([
