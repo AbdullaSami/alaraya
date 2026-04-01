@@ -87,8 +87,10 @@ class PolicyController extends Controller
                 'policy_id' => $policy->id,
             ]);
 
+            if (isset($assignmentData['ship_container_ids'])) {
                 // Attach multiple ship containers to the assignment
                 $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+            }
             $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
         }
         }
