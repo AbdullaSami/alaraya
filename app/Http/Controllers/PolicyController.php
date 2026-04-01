@@ -51,8 +51,8 @@ class PolicyController extends Controller
             'vehicle_driver_assignments' => 'required|array|min:1',
             'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
             'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
-            'vehicle_driver_assignments.*.ship_container_ids' => 'sometimes|array|min:1',
-            'vehicle_driver_assignments.*.ship_container_ids.*' => 'sometimes|exists:ship_containers_details,id',
+            'vehicle_driver_assignments.*.ship_container_ids' => 'nullable|array|min:1',
+            'vehicle_driver_assignments.*.ship_container_ids.*' => 'nullable|exists:ship_containers_details,id',
         ]);
 
         $shipOrderData = ShipOrderData::findOrFail($validated['ship_order_data_id']);
