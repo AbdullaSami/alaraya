@@ -288,6 +288,7 @@ class ReportsController extends Controller
                     }
 
                     $query->with([
+                        'policies.user',
                         'transportReceipts',
                         'vehicleDriverAssignments',
                         'vehicleDriverAssignments.vehicle',
