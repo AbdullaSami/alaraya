@@ -98,13 +98,13 @@ class ShipOrderDataController extends Controller
 
                 // Ship Policies (array) - mutually exclusive with bookings
                 'policies' => 'required_without:bookings|array|min:1',
-                'policies.*.policy_number' => 'required|string|unique:ship_policies,policy_number',
+                'policies.*.policy_number' => 'required|string',
                 'policies.*.containers' => 'sometimes|array',
                 'policies.*.containers.*.container_number' => 'sometimes|string',
 
                 // Ship Bookings (array) - mutually exclusive with policies
                 'bookings' => 'required_without:policies|array|min:1',
-                'bookings.*.booking_number' => 'required|string|unique:ship_bookings,booking_number',
+                'bookings.*.booking_number' => 'required|string',
                 'bookings.*.containers' => 'sometimes|array',
                 'bookings.*.containers.*.container_number' => 'sometimes|string',
 
@@ -160,10 +160,18 @@ class ShipOrderDataController extends Controller
                 // Create Ship Policies and their containers (if provided)
                 if (isset($validatedData['policies'])) {
                     foreach ($validatedData['policies'] as $policyData) {
+
+                    $policy = ShipPolicy::findOrFail($policyData['id']);
+                    if ($policy) {
+                        ShipPolicy::update([
+                            'policy_number' => $policyData['policy_number'],
+                        ]);
+                    }else {
                         $policy = ShipPolicy::create([
                             'ship_order_data_id' => $shipOrderData->id,
                             'policy_number' => $policyData['policy_number'],
                         ]);
+                    }
 
                         // Create containers for this policy
                         foreach ($policyData['containers'] as $containerData) {
@@ -178,11 +186,18 @@ class ShipOrderDataController extends Controller
                 // Create Ship Bookings and their containers (if provided)
                 if (isset($validatedData['bookings'])) {
                     foreach ($validatedData['bookings'] as $bookingData) {
+
+                    $booking = ShipBooking::findOrFail($bookingData['id']);
+                    if ($booking) {
+                        ShipBooking::update([
+                            'booking_number' => $bookingData['booking_number'],
+                        ]);
+                    }else {
                         $booking = ShipBooking::create([
                             'ship_order_data_id' => $shipOrderData->id,
                             'booking_number' => $bookingData['booking_number'],
                         ]);
-
+                    }
                         // Create containers for this booking
                         foreach ($bookingData['containers'] as $containerData) {
                             ShipContainersDetail::create([
