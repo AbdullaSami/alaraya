@@ -385,7 +385,7 @@ class ShipOrderDataController extends Controller
                 // =========================
                 if (isset($validatedData['policies'])) {
                     foreach ($validatedData['policies'] as $policyData) {
-                        $policy = ShipPolicy::findOrFail($policyData['id']);
+                        $policy = ShipPolicy::findOrFail($policyData->id);
                         if ($policy) {
                             ShipPolicy::update([
                                 'policy_number' => $policyData['policy_number'],
@@ -411,7 +411,7 @@ class ShipOrderDataController extends Controller
                 // =========================
                 if (isset($validatedData['bookings'])) {
                     foreach ($validatedData['bookings'] as $bookingData) {
-                        $booking = ShipBooking::findOrFail($bookingData['id']);
+                        $booking = ShipBooking::findOrFail($bookingData->id);
                         if ($booking) {
                             ShipBooking::update([
                                 'booking_number' => $bookingData['booking_number'],
