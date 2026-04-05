@@ -72,10 +72,27 @@ class PolicyController extends Controller
             'policy_type',
             'policy_aging_date',
             'policy_loading_date'
-        ]);
+            ]);
 
-        $policyData['user_id'] = auth()->id(); // Assuming you want to associate the policy with the authenticated user
-        $policy = Policy::create($policyData);
+
+
+            $policyData['user_id'] = auth()->id(); // Assuming you want to associate the policy with the authenticated user
+            $policy = Policy::create($policyData);
+            $treasury = $shipOrderData->treasuries()->first();
+            if ($treasury) {
+
+                        if ($treasury) {
+                    $treasury->balance -= $policyData['covenant_amount'] ?? 0;
+                    $treasury->save();
+
+                    $treasury->deductions()->create([
+                        'user_id' => $policyData['user_id'],
+                        'amount' => $policyData['covenant_amount'] ?? 0,
+                        'reason' => 'Transport receipt expenses for ship order #' . $policy->policy_number,
+                        'type' => 'transport_receipt',
+                    ]);
+                }
+            }
 
         // Create vehicle driver assignments with multiple containers
         $assignments = [];
