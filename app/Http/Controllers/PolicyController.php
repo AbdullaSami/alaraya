@@ -88,7 +88,7 @@ class PolicyController extends Controller
                     $treasury->deductions()->create([
                         'user_id' => $policyData['user_id'],
                         'amount' => $policyData['covenant_amount'] ?? 0,
-                        'reason' => 'Transport receipt expenses for ship order #' . $policy->policy_number,
+                        'reason' => 'Covenant expenses for Policy Number #' . $policy->policy_number,
                         'type' => 'transport_receipt',
                     ]);
                 }
