@@ -14,6 +14,8 @@ class Vehicle extends Model
         'trailer_number',
         'badge_number',
         'notes',
+        'type',
+        'office_name'
     ];
 
     public function operatingOrderVehicles()

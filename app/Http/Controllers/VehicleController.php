@@ -31,6 +31,8 @@ class VehicleController extends Controller
                 'trailer_number' => 'nullable|string',
                 'badge_number'   => 'required|string',
                 'notes'          => 'nullable|string',
+                'type'           => 'nullable|string',
+                'office_name'    => 'nullable|string',
             ]);
             $vehicle = Vehicle::create($validatedData);
             return response()->json(
@@ -58,6 +60,8 @@ class VehicleController extends Controller
                 'trailer_number' => 'sometimes|nullable|string',
                 'badge_number'   => 'sometimes|required|string',
                 'notes'          => 'sometimes|nullable|string',
+                'type'           => 'sometimes|nullable|string',
+                'office_name'    => 'sometimes|nullable|string',
             ]);
 
             $vehicle->update($validatedData);
