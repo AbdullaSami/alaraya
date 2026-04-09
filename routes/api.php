@@ -33,7 +33,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
-        return response()->json($request->user()->load('roles', 'permissions'));
+        return response()->json($request->user()->load('roles', 'permissions', 'treasuries'));
     });
     Route::get('/users', [AuthController::class, 'getUsers']);
     Route::post('/users', [AuthController::class, 'createUser']);
@@ -66,7 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/treasury/shift-handle', [TreasuryOperationsController::class, 'shiftHandle']);
     // Handle Transport Receipt
     Route::apiResource('/transport-receipts', TransportReceiptController::class);
-    
+
     // Handel policies data methods
     Route::apiResource('/policies', PolicyController::class);
 });
