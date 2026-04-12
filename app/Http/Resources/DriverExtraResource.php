@@ -34,8 +34,8 @@ class DriverExtraResource extends JsonResource
                     'driver' => $this->when($this->vehicleDriverAssignment->relationLoaded('driver'), function () {
                         return [
                             'id' => $this->vehicleDriverAssignment->driver->id,
-                            'name' => $this->vehicleDriverAssignment->driver->name ?? null,
-                            'phone' => $this->vehicleDriverAssignment->driver->phone ?? null,
+                            'name' => $this->vehicleDriverAssignment->driver->driver_name ?? null,
+                            'phone' => $this->vehicleDriverAssignment->driver->phone_number ?? null,
                         ];
                     }),
                     'vehicle' => $this->when($this->vehicleDriverAssignment->relationLoaded('vehicle'), function () {
