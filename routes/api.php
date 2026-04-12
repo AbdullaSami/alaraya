@@ -17,6 +17,7 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\TransportReceiptController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\TreasuryOperationsController;
+use App\Http\Controllers\DriverExtraController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Handel policies data methods
     Route::apiResource('/policies', PolicyController::class);
+
+    // Handel driver extras data methods
+    Route::apiResource('/driver-extras', DriverExtraController::class);
+    Route::get('/vehicle-driver-assignments/{assignmentId}/driver-extras', [DriverExtraController::class, 'getByAssignment']);
 });
 
 // Ship order number generation

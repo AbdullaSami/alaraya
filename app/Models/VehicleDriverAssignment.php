@@ -15,6 +15,10 @@ class VehicleDriverAssignment extends Model
         'policy_id',
     ];
 
+    public function driverExtras()
+    {
+        return $this->hasMany(DriverExtra::class);
+    }
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
