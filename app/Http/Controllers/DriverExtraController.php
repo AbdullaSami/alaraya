@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DriverExtra;
 use App\Http\Resources\DriverExtraResource;
+use App\Models\DriverExtra;
 use Illuminate\Http\Request;
 
 class DriverExtraController extends Controller
@@ -15,6 +15,7 @@ class DriverExtraController extends Controller
     {
         try {
             $extras = DriverExtra::with('vehicleDriverAssignment')->get();
+
             return response()->json(DriverExtraResource::collection($extras), 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve driver extras', 'message' => $e->getMessage()], 500);
@@ -28,39 +29,52 @@ class DriverExtraController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'vehicle_driver_assignment_id' => 'required|exists:vehicle_driver_assignments,id',
-                'extra_amount' => 'required|numeric|min:0',
-                'extra_type' => 'required|string|max:255',
+                'extras' => 'required|array|min:1',
+                'extras.*.vehicle_driver_assignment_id' => 'required|exists:vehicle_driver_assignments,id',
+                'extras.*.extra_amount' => 'required|numeric|min:0',
+                'extras.*.extra_type' => 'required|string|max:255',
             ]);
 
-            $extra = DriverExtra::create($validatedData);
+            $createdExtras = [];
 
-            // Get the related ship order data through the assignment -> policy -> ship order data chain
-            $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
-            $policy = $vehicleDriverAssignment->policy;
-            $shipOrderData = $policy->shipOrderData;
+            foreach ($validatedData['extras'] as $item) {
 
-            // Get the related treasury and deduct the extra amount
-            $treasury = $shipOrderData->treasuries()->first();
-            if ($treasury) {
-                $treasury->balance -= $validatedData['extra_amount'];
-                $treasury->save();
+                $extra = DriverExtra::create($item);
 
-                $treasury->deductions()->create([
-                    'user_id' => auth()->id(),
-                    'treasury_id' => $treasury->id,
-                    'amount' => $validatedData['extra_amount'],
-                    'reason' => '_bonus_ driver extra #' . $extra->id . ' - ' . $validatedData['extra_type'],
-                    'type' => 'driver_extra',
-                ]);
+                // العلاقات
+                $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
+                $policy = $vehicleDriverAssignment->policy;
+                $shipOrderData = $policy->shipOrderData;
+
+                // treasury
+                $treasury = $shipOrderData->treasuries()->first();
+
+                if ($treasury) {
+                    $treasury->balance -= $item['extra_amount'];
+                    $treasury->save();
+
+                    $treasury->deductions()->create([
+                        'user_id' => auth()->id(),
+                        'treasury_id' => $treasury->id,
+                        'amount' => $item['extra_amount'],
+                        'reason' => 'هذا الإيصال يخص مستحقات السائق والمركبة - ' . $item['extra_type'] . ' - رقم البوليصة #' . $policy->policy_number,
+                        'type' => 'driver_extra',
+                    ]);
+                }
+
+                $createdExtras[] = $extra->load('vehicleDriverAssignment');
             }
 
             return response()->json([
-                'message' => 'Driver extra created successfully',
-                'data' => new DriverExtraResource($extra->load('vehicleDriverAssignment'))
+                'message' => 'Driver extras created successfully',
+                'data' => DriverExtraResource::collection($createdExtras),
             ], 201);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create driver extra', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Failed to create driver extras',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -71,6 +85,7 @@ class DriverExtraController extends Controller
     {
         try {
             $extra = DriverExtra::with('vehicleDriverAssignment')->findOrFail($id);
+
             return response()->json(new DriverExtraResource($extra), 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve driver extra', 'message' => $e->getMessage()], 500);
@@ -97,7 +112,7 @@ class DriverExtraController extends Controller
             // Handle treasury adjustment if amount changed
             if (isset($validatedData['extra_amount']) && $validatedData['extra_amount'] != $oldAmount) {
                 $amountDifference = $validatedData['extra_amount'] - $oldAmount;
-                
+
                 // Get the related ship order data through the assignment -> policy -> ship order data chain
                 $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
                 $policy = $vehicleDriverAssignment->policy;
@@ -114,7 +129,7 @@ class DriverExtraController extends Controller
                         'user_id' => auth()->id(),
                         'treasury_id' => $treasury->id,
                         'amount' => $amountDifference,
-                        'reason' => '_adjustment_ driver extra #' . $extra->id . ' - ' . $validatedData['extra_type'] . ' (from ' . $oldAmount . ' to ' . $validatedData['extra_amount'] . ')',
+                        'reason' => '_adjustment_ driver extra #'.$extra->id.' - '.$validatedData['extra_type'].' (from '.$oldAmount.' to '.$validatedData['extra_amount'].')',
                         'type' => 'driver_extra_adjustment',
                     ]);
                 }
@@ -122,7 +137,7 @@ class DriverExtraController extends Controller
 
             return response()->json([
                 'message' => 'Driver extra updated successfully',
-                'data' => new DriverExtraResource($extra->load('vehicleDriverAssignment'))
+                'data' => new DriverExtraResource($extra->load('vehicleDriverAssignment')),
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to update driver extra', 'message' => $e->getMessage()], 500);
@@ -136,7 +151,7 @@ class DriverExtraController extends Controller
     {
         try {
             $extra = DriverExtra::findOrFail($id);
-            
+
             // Get the related ship order data through the assignment -> policy -> ship order data chain
             $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
             $policy = $vehicleDriverAssignment->policy;
@@ -153,12 +168,13 @@ class DriverExtraController extends Controller
                     'user_id' => auth()->id(),
                     'treasury_id' => $treasury->id,
                     'amount' => -$extra->extra_amount, // Negative amount indicates refund
-                    'reason' => '_refund_ driver extra #' . $extra->id . ' - ' . $extra->extra_type,
+                    'reason' => '_refund_ driver extra #'.$extra->id.' - '.$extra->extra_type,
                     'type' => 'driver_extra_refund',
                 ]);
             }
-            
+
             $extra->delete();
+
             return response()->json(['message' => 'Driver extra deleted successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to delete driver extra', 'message' => $e->getMessage()], 500);
@@ -174,6 +190,7 @@ class DriverExtraController extends Controller
             $extras = DriverExtra::where('vehicle_driver_assignment_id', $assignmentId)
                 ->with('vehicleDriverAssignment')
                 ->get();
+
             return response()->json(DriverExtraResource::collection($extras), 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve extras for assignment', 'message' => $e->getMessage()], 500);
