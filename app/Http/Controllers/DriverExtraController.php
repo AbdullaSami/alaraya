@@ -90,42 +90,12 @@ class DriverExtraController extends Controller
     {
         try {
             $extra = DriverExtra::findOrFail($id);
-            $oldAmount = $extra->extra_amount;
-
             $validatedData = $request->validate([
                 'vehicle_driver_assignment_id' => 'sometimes|required|exists:vehicle_driver_assignments,id',
                 'extra_amount' => 'sometimes|required|numeric|min:0',
                 'extra_type' => 'sometimes|required|string|max:255',
             ]);
-
             $extra->update($validatedData);
-
-            // Handle treasury adjustment if amount changed
-            if (isset($validatedData['extra_amount']) && $validatedData['extra_amount'] != $oldAmount) {
-                $amountDifference = $validatedData['extra_amount'] - $oldAmount;
-
-                // Get the related ship order data through the assignment -> policy -> ship order data chain
-                $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
-                $policy = $vehicleDriverAssignment->policy;
-                $shipOrderData = $policy->shipOrderData;
-
-                // Get the related treasury and adjust the balance
-                $treasury = $shipOrderData->treasuries()->first();
-                if ($treasury) {
-                    $treasury->balance -= $amountDifference;
-                    $treasury->save();
-
-                    // Create a treasury deduction record for the adjustment
-                    $treasury->deductions()->create([
-                        'user_id' => auth()->id(),
-                        'treasury_id' => $treasury->id,
-                        'amount' => $amountDifference,
-                        'reason' => '_adjustment_ driver extra #'.$extra->id.' - '.$validatedData['extra_type'].' (from '.$oldAmount.' to '.$validatedData['extra_amount'].')',
-                        'type' => 'driver_extra_adjustment',
-                    ]);
-                }
-            }
-
             return response()->json([
                 'message' => 'Driver extra updated successfully',
                 'data' => new DriverExtraResource($extra->load('vehicleDriverAssignment')),
@@ -142,27 +112,6 @@ class DriverExtraController extends Controller
     {
         try {
             $extra = DriverExtra::findOrFail($id);
-
-            // Get the related ship order data through the assignment -> policy -> ship order data chain
-            $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
-            $policy = $vehicleDriverAssignment->policy;
-            $shipOrderData = $policy->shipOrderData;
-
-            // Get the related treasury and return the deducted amount
-            $treasury = $shipOrderData->treasuries()->first();
-            if ($treasury) {
-                $treasury->balance += $extra->extra_amount;
-                $treasury->save();
-
-                // Create a treasury deduction record for the refund
-                $treasury->deductions()->create([
-                    'user_id' => auth()->id(),
-                    'treasury_id' => $treasury->id,
-                    'amount' => -$extra->extra_amount, // Negative amount indicates refund
-                    'reason' => '_refund_ driver extra #'.$extra->id.' - '.$extra->extra_type,
-                    'type' => 'driver_extra_refund',
-                ]);
-            }
 
             $extra->delete();
 
