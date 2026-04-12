@@ -57,7 +57,7 @@ class DriverExtraResource extends JsonResource
                     'ship_order_data' => $this->when($this->vehicleDriverAssignment->relationLoaded('policy') && $this->vehicleDriverAssignment->policy->relationLoaded('shipOrderData'), function () {
                         return [
                             'id' => $this->vehicleDriverAssignment->policy->shipOrderData->id,
-                            'ship_order_number' => $this->vehicleDriverAssignment->policy->shipOrderData->ship_order_number
+                            'ship_order_number' => $this->vehicleDriverAssignment->policy->shipOrderData->order_number
                         ];
                     }),
                 ];
