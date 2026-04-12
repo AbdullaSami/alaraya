@@ -1,0 +1,164 @@
+{
+  "info": {
+    "_postman_id": "driver-extras-collection",
+    "name": "Driver Extras - Focused Collection",
+    "description": "Postman collection for Driver Extras API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Get All Driver Extras",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/driver-extras",
+          "host": ["{{base_url}}"],
+          "path": ["driver-extras"]
+        }
+      }
+    },
+    {
+      "name": "Create Driver Extra",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"assignment_id\": 1, \"description\": \"Extra expense\", \"amount\": 500}"
+        },
+        "url": {
+          "raw": "{{base_url}}/driver-extras",
+          "host": ["{{base_url}}"],
+          "path": ["driver-extras"]
+        }
+      }
+    },
+    {
+      "name": "Get Driver Extra",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/driver-extras/1",
+          "host": ["{{base_url}}"],
+          "path": ["driver-extras", "1"]
+        }
+      }
+    },
+    {
+      "name": "Update Driver Extra",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"assignment_id\": 1, \"description\": \"Updated extra expense\", \"amount\": 600}"
+        },
+        "url": {
+          "raw": "{{base_url}}/driver-extras/1",
+          "host": ["{{base_url}}"],
+          "path": ["driver-extras", "1"]
+        }
+      }
+    },
+    {
+      "name": "Delete Driver Extra",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/driver-extras/1",
+          "host": ["{{base_url}}"],
+          "path": ["driver-extras", "1"]
+        }
+      }
+    },
+    {
+      "name": "Get Driver Extras by Assignment",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/vehicle-driver-assignments/1/driver-extras",
+          "host": ["{{base_url}}"],
+          "path": ["vehicle-driver-assignments", "1", "driver-extras"]
+        }
+      }
+    }
+  ]
+}

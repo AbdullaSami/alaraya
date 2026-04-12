@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Handel driver extras data methods
     Route::apiResource('/driver-extras', DriverExtraController::class);
     Route::get('/vehicle-driver-assignments/{assignmentId}/driver-extras', [DriverExtraController::class, 'getByAssignment']);
+    Route::get('/get-assignment/ship-order/{shipOrderId}/policy/{policyId}', [PolicyController::class, 'getAssignmentByShipOrderAndPolicy']);
 });
 
 // Ship order number generation

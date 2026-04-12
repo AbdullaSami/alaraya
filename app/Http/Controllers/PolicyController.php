@@ -227,6 +227,22 @@ class PolicyController extends Controller
         ]);
     }
 
+    public function getAssignmentByShipOrderAndPolicy($shipOrderId, $policyId)
+    {
+        $assignment = VehicleDriverAssignment::whereHas('policy', function ($query) use ($policyId) {
+            $query->where('id', $policyId);
+        })->whereHas('policy.shipOrderData', function ($query) use ($shipOrderId) {
+            $query->where('id', $shipOrderId);
+        })->with(['vehicle', 'driver', 'shipContainers'])->first();
+
+        if (!$assignment) {
+            return response()->json([
+                'message' => 'No assignment found for the given ship order and policy'
+            ], 404);
+        }
+
+        return response()->json($assignment);
+    }
     public function generatePolicyNumber()
     {
         $policyNumber = Policy::generatePolicyNumber();
