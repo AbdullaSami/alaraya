@@ -48,6 +48,20 @@ class DriverExtraResource extends JsonResource
                             'office_name' => $this->vehicleDriverAssignment->vehicle->office_name,
                         ];
                     }),
+                    'policy' => $this->when($this->vehicleDriverAssignment->relationLoaded('policy'), function () {
+                        return [
+                            'id' => $this->vehicleDriverAssignment->policy->id,
+                            'policy_number' => $this->vehicleDriverAssignment->policy->policy_number,
+                            'start_date' => $this->vehicleDriverAssignment->policy->start_date,
+                            'end_date' => $this->vehicleDriverAssignment->policy->end_date,
+                        ];
+                    }),
+                    'ship_order_data' => $this->when($this->vehicleDriverAssignment->relationLoaded('policy') && $this->vehicleDriverAssignment->policy->relationLoaded('shipOrderData'), function () {
+                        return [
+                            'id' => $this->vehicleDriverAssignment->policy->shipOrderData->id,
+                            'ship_order_number' => $this->vehicleDriverAssignment->policy->shipOrderData->ship_order_number
+                        ];
+                    }),
                 ];
             }),
         ];
