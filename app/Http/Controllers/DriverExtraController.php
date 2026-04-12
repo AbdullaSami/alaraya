@@ -19,7 +19,7 @@ class DriverExtraController extends Controller
                 'vehicleDriverAssignment.vehicle',
                 'vehicleDriverAssignment.driver',
                 'vehicleDriverAssignment.policy',
-                'vehicleDriverAssignment.shipOrderData',
+                'vehicleDriverAssignment.policy.shipOrderData',
                 )->get();
 
             return response()->json(DriverExtraResource::collection($extras), 200);
@@ -74,7 +74,7 @@ class DriverExtraController extends Controller
                 'vehicleDriverAssignment.vehicle',
                 'vehicleDriverAssignment.driver',
                 'vehicleDriverAssignment.policy',
-                'vehicleDriverAssignment.shipOrderData',
+                'vehicleDriverAssignment.policy.shipOrderData',
                 )->findOrFail($id);
 
             return response()->json(new DriverExtraResource($extra), 200);
