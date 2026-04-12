@@ -85,6 +85,7 @@ class ShipOrderDataController extends Controller
                 'containers_type' => 'nullable|string',
                 'containers_number' => 'nullable|string',
                 'loading_way' => 'nullable|string',
+                'handel_way' => 'nullable|string',
                 'transfers_count' => 'nullable|integer',
 
                 // Ship Line Client Data
@@ -274,6 +275,7 @@ class ShipOrderDataController extends Controller
                 'containers_type' => 'nullable|string',
                 'containers_number' => 'nullable|string',
                 'loading_way' => 'nullable|string',
+                'handel_way' => 'nullable|string',
                 'transfers_count' => 'nullable|integer',
 
                 // Ship Line Client Data
