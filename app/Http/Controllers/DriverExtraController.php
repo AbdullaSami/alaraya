@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\DriverExtraResource;
 use App\Models\DriverExtra;
+use App\Models\VehicleDriverAssignment;
 use Illuminate\Http\Request;
 
 class DriverExtraController extends Controller
@@ -14,7 +15,12 @@ class DriverExtraController extends Controller
     public function index()
     {
         try {
-            $extras = DriverExtra::with('vehicleDriverAssignment')->get();
+            $extras = DriverExtra::with(
+                'vehicleDriverAssignment.vehicle',
+                'vehicleDriverAssignment.driver',
+                'vehicleDriverAssignment.policy',
+                'vehicleDriverAssignment.shipOrderData',
+                )->get();
 
             return response()->json(DriverExtraResource::collection($extras), 200);
         } catch (\Exception $e) {
@@ -29,8 +35,8 @@ class DriverExtraController extends Controller
     {
         try {
             $validatedData = $request->validate([
+                'vehicle_driver_assignment_id' => 'required|exists:vehicle_driver_assignments,id',
                 'extras' => 'required|array|min:1',
-                'extras.*.vehicle_driver_assignment_id' => 'required|exists:vehicle_driver_assignments,id',
                 'extras.*.extra_amount' => 'required|numeric|min:0',
                 'extras.*.extra_type' => 'required|string|max:255',
             ]);
@@ -39,28 +45,8 @@ class DriverExtraController extends Controller
 
             foreach ($validatedData['extras'] as $item) {
 
+                $item['vehicle_driver_assignment_id'] = $validatedData['vehicle_driver_assignment_id'];
                 $extra = DriverExtra::create($item);
-
-                // العلاقات
-                $vehicleDriverAssignment = $extra->vehicleDriverAssignment;
-                $policy = $vehicleDriverAssignment->policy;
-                $shipOrderData = $policy->shipOrderData;
-
-                // treasury
-                $treasury = $shipOrderData->treasuries()->first();
-
-                if ($treasury) {
-                    $treasury->balance -= $item['extra_amount'];
-                    $treasury->save();
-
-                    $treasury->deductions()->create([
-                        'user_id' => auth()->id(),
-                        'treasury_id' => $treasury->id,
-                        'amount' => $item['extra_amount'],
-                        'reason' => 'هذا الإيصال يخص مستحقات السائق والمركبة - ' . $item['extra_type'] . ' - رقم البوليصة #' . $policy->policy_number,
-                        'type' => 'driver_extra',
-                    ]);
-                }
 
                 $createdExtras[] = $extra->load('vehicleDriverAssignment');
             }
@@ -84,7 +70,12 @@ class DriverExtraController extends Controller
     public function show(string $id)
     {
         try {
-            $extra = DriverExtra::with('vehicleDriverAssignment')->findOrFail($id);
+            $extra = DriverExtra::with(
+                'vehicleDriverAssignment.vehicle',
+                'vehicleDriverAssignment.driver',
+                'vehicleDriverAssignment.policy',
+                'vehicleDriverAssignment.shipOrderData',
+                )->findOrFail($id);
 
             return response()->json(new DriverExtraResource($extra), 200);
         } catch (\Exception $e) {
