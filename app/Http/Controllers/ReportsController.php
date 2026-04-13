@@ -329,9 +329,15 @@ class ReportsController extends Controller
             ])->get();
 
             // Calculate driver extras total for each vehicle
-            $vehiclesWithExtras = $vehicles->map(function ($shipOrder) {
+            $totalNoloanSum = 0;
+            $totalCovenantAmountSum = 0;
+            $totalDriverExtrasSum = 0;
+
+            $vehiclesWithExtras = $vehicles->map(function ($shipOrder) use (&$totalNoloanSum, &$totalCovenantAmountSum, &$totalDriverExtrasSum) {
                 $driverExtrasSum = 0;
                 $covenantAmountSum = 0;
+                $noloans = $shipOrder->noloans ?? 0;
+
                 foreach ($shipOrder->policies as $policy) {
                     $covenantAmountSum += ($policy->covenant_amount ?? 0);
                     foreach ($policy->vehicleDriverAssignments as $assignment) {
@@ -341,15 +347,31 @@ class ReportsController extends Controller
                     }
                 }
 
-                // Add driver_extras_total and covenant_amount_total to the ship order
+                // Add driver_extras_total, covenant_amount_total, and noloans to the ship order
                 $shipOrder->driver_extras_total = $driverExtrasSum;
                 $shipOrder->covenant_amount_total = $covenantAmountSum;
+                $shipOrder->noloans = $noloans;
+
+                // Accumulate totals
+                $totalNoloanSum += $noloans;
+                $totalCovenantAmountSum += $covenantAmountSum;
+                $totalDriverExtrasSum += $driverExtrasSum;
+
                 return $shipOrder;
             });
 
+            // Calculate net amount
+            $netAmount = ($totalNoloanSum - $totalCovenantAmountSum) + $totalDriverExtrasSum;
+
             return response()->json([
                 'success' => true,
-                'data' => $vehiclesWithExtras
+                'data' => $vehiclesWithExtras,
+                'totals' => [
+                    'total_noloan' => $totalNoloanSum,
+                    'total_covenant_amount' => $totalCovenantAmountSum,
+                    'total_driver_extras' => $totalDriverExtrasSum,
+                    'net_amount' => $netAmount
+                ]
             ], 200);
         } catch (\Throwable $th) {
             \Log::error('Vehicle Statement Error:', [
