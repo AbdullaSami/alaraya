@@ -295,6 +295,7 @@ class ReportsController extends Controller
                         'vehicleDriverAssignments',
                         'vehicleDriverAssignments.vehicle',
                         'vehicleDriverAssignments.driver',
+                        'vehicleDriverAssignments.driverExtras',
                     ]);
                 },
                 'shipLineClients.client',
