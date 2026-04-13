@@ -144,6 +144,7 @@ class ReportsController extends Controller
             $totalTransportReceiptsSum = 0;
             $totalNoloanSum = 0;
             $totalDriverExtrasSum = 0;
+            $totalCovenantAmountSum = 0;
 
             $shipOrdersDetails = [];
 
@@ -189,6 +190,13 @@ class ReportsController extends Controller
                 }
                 $totalDriverExtrasSum += $driverExtrasSum;
 
+                // Calculate covenant amount sum for this ship order
+                $covenantAmountSum = 0;
+                foreach ($shipOrder->policies as $policy) {
+                    $covenantAmountSum += ($policy->covenant_amount ?? 0);
+                }
+                $totalCovenantAmountSum += $covenantAmountSum;
+
                 // Add to total noloan sum
                 $totalNoloanSum += $noloans;
 
@@ -218,10 +226,12 @@ class ReportsController extends Controller
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
                     'driver_extras_total' => $driverExtrasSum,
+                    'covenant_amount_total' => $covenantAmountSum,
                     'transportReceipt' => $shipOrder->transportReceipt->map(function ($transportReceipt) {
                         $policy = $transportReceipt->policy;
                         return [
                             'policy_number' => $policy->policy_number,
+                            'covenant_amount' => $policy->covenant_amount,
                             'transport_receipt_details' => [
                                 'army_scales' => $transportReceipt->army_scales,
                                 'roads_and_bridges' => $transportReceipt->roads_and_bridges,
@@ -259,7 +269,7 @@ class ReportsController extends Controller
             }
 
             // Calculate net amount
-            $netAmount = $totalTransportReceiptsSum + $totalNoloanSum + $totalDriverExtrasSum;
+            $netAmount = ($totalCovenantAmountSum - $totalNoloanSum) + $totalDriverExtrasSum;
 
             return response()->json([
                 'success' => true,
@@ -271,6 +281,7 @@ class ReportsController extends Controller
                     'total_sum_transport_receipts' => $totalTransportReceiptsSum,
                     'total_sum_noloan' => $totalNoloanSum,
                     'total_driver_extras' => $totalDriverExtrasSum,
+                    'total_covenant_amount' => $totalCovenantAmountSum,
                     'net_amount' => $netAmount
                 ]
             ], 200);
@@ -320,7 +331,9 @@ class ReportsController extends Controller
             // Calculate driver extras total for each vehicle
             $vehiclesWithExtras = $vehicles->map(function ($shipOrder) {
                 $driverExtrasSum = 0;
+                $covenantAmountSum = 0;
                 foreach ($shipOrder->policies as $policy) {
+                    $covenantAmountSum += ($policy->covenant_amount ?? 0);
                     foreach ($policy->vehicleDriverAssignments as $assignment) {
                         foreach ($assignment->driverExtras as $extra) {
                             $driverExtrasSum += ($extra->extra_amount ?? 0);
@@ -328,8 +341,9 @@ class ReportsController extends Controller
                     }
                 }
 
-                // Add driver_extras_total to the ship order
+                // Add driver_extras_total and covenant_amount_total to the ship order
                 $shipOrder->driver_extras_total = $driverExtrasSum;
+                $shipOrder->covenant_amount_total = $covenantAmountSum;
                 return $shipOrder;
             });
 
