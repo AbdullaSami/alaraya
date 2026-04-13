@@ -109,6 +109,7 @@ class ReportsController extends Controller
                 'operatingOrder',
                 'policies.vehicleDriverAssignments.vehicle',
                 'policies.vehicleDriverAssignments.driver',
+                'policies.vehicleDriverAssignments.driverExtras',
                 'policies.transportReceipts',
                 'policies',
                 'transportReceipt'
@@ -231,6 +232,7 @@ class ReportsController extends Controller
                                 'id' => $assignment->id,
                                 'vehicle_info' => $assignment->vehicle ?? null,
                                 'driver_info' => $assignment->driver ?? null,
+                                'driver_extras' => $assignment->driverExtras ?? null,
                             ];
                         });
                     })->unique('id')->values(),
