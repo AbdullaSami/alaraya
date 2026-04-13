@@ -143,6 +143,7 @@ class ReportsController extends Controller
             $totalOrdersNoloans = 0;
             $totalTransportReceiptsSum = 0;
             $totalNoloanSum = 0;
+            $totalDriverExtrasSum = 0;
 
             $shipOrdersDetails = [];
 
@@ -177,6 +178,17 @@ class ReportsController extends Controller
                 }
                 $totalTransportReceiptsSum += $transportReceiptsSum;
 
+                // Calculate driver extras sum for this ship order
+                $driverExtrasSum = 0;
+                foreach ($shipOrder->policies as $policy) {
+                    foreach ($policy->vehicleDriverAssignments as $assignment) {
+                        foreach ($assignment->driverExtras as $extra) {
+                            $driverExtrasSum += ($extra->extra_amount ?? 0);
+                        }
+                    }
+                }
+                $totalDriverExtrasSum += $driverExtrasSum;
+
                 // Add to total noloan sum
                 $totalNoloanSum += $noloans;
 
@@ -205,6 +217,7 @@ class ReportsController extends Controller
                     'transfers_count' => $shipOrder->transfers_count,
                     'has_operating_order' => $operatingOrdersCount > 0,
                     'transport_receipts_sum' => $transportReceiptsSum,
+                    'driver_extras_total' => $driverExtrasSum,
                     'transportReceipt' => $shipOrder->transportReceipt->map(function ($transportReceipt) {
                         $policy = $transportReceipt->policy;
                         return [
@@ -246,7 +259,7 @@ class ReportsController extends Controller
             }
 
             // Calculate net amount
-            $netAmount = $totalTransportReceiptsSum + $totalNoloanSum;
+            $netAmount = $totalTransportReceiptsSum + $totalNoloanSum + $totalDriverExtrasSum;
 
             return response()->json([
                 'success' => true,
@@ -257,6 +270,7 @@ class ReportsController extends Controller
                     'ship_orders_details' => $shipOrdersDetails,
                     'total_sum_transport_receipts' => $totalTransportReceiptsSum,
                     'total_sum_noloan' => $totalNoloanSum,
+                    'total_driver_extras' => $totalDriverExtrasSum,
                     'net_amount' => $netAmount
                 ]
             ], 200);
@@ -303,9 +317,25 @@ class ReportsController extends Controller
                 'shipLineClients.destination'
             ])->get();
 
+            // Calculate driver extras total for each vehicle
+            $vehiclesWithExtras = $vehicles->map(function ($shipOrder) {
+                $driverExtrasSum = 0;
+                foreach ($shipOrder->policies as $policy) {
+                    foreach ($policy->vehicleDriverAssignments as $assignment) {
+                        foreach ($assignment->driverExtras as $extra) {
+                            $driverExtrasSum += ($extra->extra_amount ?? 0);
+                        }
+                    }
+                }
+
+                // Add driver_extras_total to the ship order
+                $shipOrder->driver_extras_total = $driverExtrasSum;
+                return $shipOrder;
+            });
+
             return response()->json([
                 'success' => true,
-                'data' => $vehicles
+                'data' => $vehiclesWithExtras
             ], 200);
         } catch (\Throwable $th) {
             \Log::error('Vehicle Statement Error:', [
