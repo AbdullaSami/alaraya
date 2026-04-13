@@ -269,7 +269,7 @@ class ReportsController extends Controller
             }
 
             // Calculate net amount
-            $netAmount = ($totalCovenantAmountSum - $totalNoloanSum) + $totalDriverExtrasSum;
+            $netAmount = ($totalNoloanSum - $totalCovenantAmountSum) + $totalDriverExtrasSum;
 
             return response()->json([
                 'success' => true,
