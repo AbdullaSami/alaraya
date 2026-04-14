@@ -415,7 +415,7 @@ class ReportsController extends Controller
         }
     }
 
-    public function show(Request $request, $serial)
+    public function getSharedReport(Request $request, $serial)
     {
         try {
             $link = ShareLink::where('serial_number', $serial)->firstOrFail();
