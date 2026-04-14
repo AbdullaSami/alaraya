@@ -446,7 +446,10 @@ class ReportsController extends Controller
                     return response()->json(['error' => 'Invalid report type'], 400);
             }
 
-            return $report;
+            return $data = [
+                'report' => $report,
+                'type' => $link->type,
+            ];
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $th) {
             return response()->json([
                 'error' => 'Share link not found',
