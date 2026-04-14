@@ -415,13 +415,12 @@ class ReportsController extends Controller
         }
     }
 
-    public function show(Request $request)
+    public function show(Request $request, $serial)
     {
         try {
-            $link = ShareLink::where('serial_number', $request->route('serial'))->firstOrFail();
+            $link = ShareLink::where('serial_number', $serial)->firstOrFail();
 
-            $request->merge($link->body);
-
+            $request->merge($link->body); // now $request has all body fields
             switch ($link->type) {
                 case 'vehicle_report':
                     $report = $this->vehicleReport($link->body['number'] ?? '');
