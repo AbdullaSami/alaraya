@@ -420,6 +420,7 @@ class ReportsController extends Controller
         try {
             $link = ShareLink::where('serial_number', $request->serial)->firstOrFail();
 
+            dd($link);
             $request->merge($link->body); // merge body into request for Request-based methods
 
             switch ($link->type) {
