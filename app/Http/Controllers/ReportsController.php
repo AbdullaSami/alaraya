@@ -443,7 +443,7 @@ class ReportsController extends Controller
             }
 
             return $report; // return the report response directly, not a new json wrapper
-        } catch (\Throwable $th) {
+        } catch (\Exception $th) {
             return response()->json([
                 'error' => 'Failed to retrieve shared report',
                 'message' => $th->getMessage()
