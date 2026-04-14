@@ -417,30 +417,37 @@ class ReportsController extends Controller
 
     public function show(Request $request)
     {
-        $link = ShareLink::where('serial_number', $request->serial)->firstOrFail();
+        try {
+            $link = ShareLink::where('serial_number', $request->serial)->firstOrFail();
 
-        $request->merge($link->body); // merge body into request for Request-based methods
+            $request->merge($link->body); // merge body into request for Request-based methods
 
-        switch ($link->type) {
-            case 'vehicle_report':
-                $report = $this->vehicleReport($link->body['number'] ?? '');
-                break;
-            case 'torrents_report':
-                $report = $this->torrentsReports($link->body['number'] ?? '');
-                break;
-            case 'loading_withdrawal_report':
-                $report = $this->LoadingWithdrawalReport($link->body['number'] ?? '');
-                break;
-            case 'client_account_statements':
-                $report = $this->clientAccountStatements($request); // pass full request
-                break;
-            case 'vehicle_statement':
-                $report = $this->vehicleStatement($request); // pass full request
-                break;
-            default:
-                return response()->json(['error' => 'Invalid report type'], 400);
+            switch ($link->type) {
+                case 'vehicle_report':
+                    $report = $this->vehicleReport($link->body['number'] ?? '');
+                    break;
+                case 'torrents_report':
+                    $report = $this->torrentsReports($link->body['number'] ?? '');
+                    break;
+                case 'loading_withdrawal_report':
+                    $report = $this->LoadingWithdrawalReport($link->body['number'] ?? '');
+                    break;
+                case 'client_account_statements':
+                    $report = $this->clientAccountStatements($request); // pass full request
+                    break;
+                case 'vehicle_statement':
+                    $report = $this->vehicleStatement($request); // pass full request
+                    break;
+                default:
+                    return response()->json(['error' => 'Invalid report type'], 400);
+            }
+
+            return $report; // return the report response directly, not a new json wrapper
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Failed to retrieve shared report',
+                'message' => $th->getMessage()
+            ], 500);
         }
-
-        return $report; // return the report response directly, not a new json wrapper
     }
 }
