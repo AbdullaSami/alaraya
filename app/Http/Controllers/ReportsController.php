@@ -389,22 +389,29 @@ class ReportsController extends Controller
 
     public function GenerateShareLink(Request $request)
     {
-        $request->validate([
-            'type' => 'required|string',
-            'body' => 'required|array',
-        ]);
+        try {
+            $request->validate([
+                'type' => 'required|string',
+                'body' => 'required|array',
+            ]);
 
-        $link = ShareLink::create([
-            'serial_number' => ShareLink::generateSerial(),
-            'user_id'       => auth()->id(),
-            'type'          => $request->type,
-            'body'          => json_encode($request->body),
-        ]);
+            $link = ShareLink::create([
+                'serial_number' => ShareLink::generateSerial(),
+                'user_id'       => auth()->id(),
+                'type'          => $request->type,
+                'body'          => json_encode($request->body),
+            ]);
 
-        return response()->json([
-            'serial' => $link->serial_number,
-            'url'    => url("/report/share/{$link->serial_number}"),
-        ]);
+            return response()->json([
+                'serial' => $link->serial_number,
+                'url'    => url("/report/share/{$link->serial_number}"),
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Failed to generate share link',
+                'message' => $th->getMessage()
+            ], 500);
+        }
     }
 
     public function show(Request $request)
