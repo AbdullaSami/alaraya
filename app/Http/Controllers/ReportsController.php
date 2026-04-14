@@ -444,12 +444,17 @@ class ReportsController extends Controller
             }
 
             return $report;
-        } catch (\Exception $th) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $th) {
+            return response()->json([
+                'error' => 'Share link not found',
+                'message' => 'The provided serial number does not exist'
+            ], 404);
+        } catch (\Throwable $th) {
             return response()->json([
                 'error' => 'Failed to retrieve shared report',
                 'message' => $th->getMessage(),
-                'line' => $th->getLine(),      // add this
-                'file' => $th->getFile(),      // add this
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
             ], 500);
         }
     }
