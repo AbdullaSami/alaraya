@@ -420,17 +420,17 @@ class ReportsController extends Controller
         try {
             $link = ShareLink::where('serial_number', $serial)->firstOrFail();
 
-            dd($link->body->number); // Debugging line to inspect the retrieved link
+            $number = $link->body->number; // Debugging line to inspect the retrieved link
             $request->merge($link->body); // now $request has all body fields
             switch ($link->type) {
                 case 'vehicle_report':
-                    $report = $this->vehicleReport($link->body['number'] ?? '');
+                    $report = $this->vehicleReport($number ?? '');
                     break;
                 case 'torrents_report':
-                    $report = $this->torrentsReports($link->body['number'] ?? '');
+                    $report = $this->torrentsReports($number ?? '');
                     break;
                 case 'loading_withdrawal_report':
-                    $report = $this->LoadingWithdrawalReport($link->body['number'] ?? '');
+                    $report = $this->LoadingWithdrawalReport($number ?? '');
                     break;
                 case 'client_account_statements':
                     $report = $this->clientAccountStatements($request);
