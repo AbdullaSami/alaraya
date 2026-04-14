@@ -75,7 +75,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/driver-extras', DriverExtraController::class);
     Route::get('/vehicle-driver-assignments/{assignmentId}/driver-extras', [DriverExtraController::class, 'getByAssignment']);
     Route::get('/get-assignment/ship-order/{shipOrderId}/policy/{policyId}', [PolicyController::class, 'getAssignmentByShipOrderAndPolicy']);
+
+    Route::post('/reports/generate-share-link', [ReportsController::class, 'GenerateShareLink']);
 });
+
+Route::get('/reports/shared', [ReportsController::class, 'getSharedReport']);
 
 // Ship order number generation
 Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);

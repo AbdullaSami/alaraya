@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ShipOrderData;
+use App\Models\ShareLink;
 
 class ReportsController extends Controller
 {
@@ -384,5 +385,54 @@ class ReportsController extends Controller
                 'message' => $th->getMessage()
             ], 500);
         }
+    }
+
+    public function GenerateShareLink(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|string',
+            'body' => 'required|array',
+        ]);
+
+        $link = ShareLink::create([
+            'serial_number' => ShareLink::generateSerial(),
+            'user_id'       => auth()->id(),
+            'type'          => $request->type,
+            'body'          => json_encode($request->body),
+        ]);
+
+        return response()->json([
+            'serial' => $link->serial_number,
+            'url'    => url("/report/share/{$link->serial_number}"),
+        ]);
+    }
+
+    public function show(Request $request)
+    {
+        $link = ShareLink::where('serial_number', $request->serial)->firstOrFail();
+
+        $request->merge($link->body); // merge body into request for Request-based methods
+
+        switch ($link->type) {
+            case 'vehicle_report':
+                $report = $this->vehicleReport($link->body['number'] ?? '');
+                break;
+            case 'torrents_report':
+                $report = $this->torrentsReports($link->body['number'] ?? '');
+                break;
+            case 'loading_withdrawal_report':
+                $report = $this->LoadingWithdrawalReport($link->body['number'] ?? '');
+                break;
+            case 'client_account_statements':
+                $report = $this->clientAccountStatements($request); // pass full request
+                break;
+            case 'vehicle_statement':
+                $report = $this->vehicleStatement($request); // pass full request
+                break;
+            default:
+                return response()->json(['error' => 'Invalid report type'], 400);
+        }
+
+        return $report; // return the report response directly, not a new json wrapper
     }
 }
