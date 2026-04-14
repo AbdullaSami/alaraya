@@ -443,7 +443,7 @@ class ReportsController extends Controller
                     return response()->json(['error' => 'Invalid report type'], 400);
             }
 
-            return $report; // return the report response directly, not a new json wrapper
+            return response()->json($report); // return the report response directly, not a new json wrapper
         } catch (\Exception $th) {
             return response()->json([
                 'error' => 'Failed to retrieve shared report',
