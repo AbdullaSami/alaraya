@@ -21,7 +21,7 @@ class ShareLink extends Model
         'body' => 'array',
     ];
 
-    public function generateSerialNumber()
+    public static function generateSerialNumber()
     {
         do {
             $serial = strtoupper(Str::random(10));
