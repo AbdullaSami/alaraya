@@ -396,7 +396,6 @@ class ReportsController extends Controller
             ]);
 
             $link = ShareLink::create([
-                'serial_number' => ShareLink::generateSerialNumber(),
                 'user_id'       => auth()->id(),
                 'type'          => $request->type,
                 'body'          => json_encode($request->body),
