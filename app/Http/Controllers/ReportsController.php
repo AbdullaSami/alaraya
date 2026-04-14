@@ -405,7 +405,7 @@ class ReportsController extends Controller
 
             return response()->json([
                 'serial' => $link->serial_number,
-                'url'    => url("/report/share/{$link->serial_number}"),
+                'url'    => url("/reports/share-links/{$link->serial_number}"),
             ]);
         } catch (\Throwable $th) {
             return response()->json([
