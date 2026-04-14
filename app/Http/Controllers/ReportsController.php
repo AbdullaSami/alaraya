@@ -420,7 +420,7 @@ class ReportsController extends Controller
         try {
             $link = ShareLink::where('serial_number', $serial)->firstOrFail();
 
-            dd($link); // Debugging line to inspect the retrieved link
+            dd($link->body['number']); // Debugging line to inspect the retrieved link
             $request->merge($link->body); // now $request has all body fields
             switch ($link->type) {
                 case 'vehicle_report':
