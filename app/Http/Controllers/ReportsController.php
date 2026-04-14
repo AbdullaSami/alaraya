@@ -418,10 +418,9 @@ class ReportsController extends Controller
     public function show(Request $request)
     {
         try {
-            $link = ShareLink::where('serial_number', $request->serial)->firstOrFail();
+            $link = ShareLink::where('serial_number', $request->route('serial'))->firstOrFail();
 
-            dd($link);
-            $request->merge($link->body); // merge body into request for Request-based methods
+            $request->merge($link->body);
 
             switch ($link->type) {
                 case 'vehicle_report':
@@ -434,20 +433,22 @@ class ReportsController extends Controller
                     $report = $this->LoadingWithdrawalReport($link->body['number'] ?? '');
                     break;
                 case 'client_account_statements':
-                    $report = $this->clientAccountStatements($request); // pass full request
+                    $report = $this->clientAccountStatements($request);
                     break;
                 case 'vehicle_statement':
-                    $report = $this->vehicleStatement($request); // pass full request
+                    $report = $this->vehicleStatement($request);
                     break;
                 default:
                     return response()->json(['error' => 'Invalid report type'], 400);
             }
 
-            return response()->json($report); // return the report response directly, not a new json wrapper
+            return $report;
         } catch (\Exception $th) {
             return response()->json([
                 'error' => 'Failed to retrieve shared report',
-                'message' => $th->getMessage()
+                'message' => $th->getMessage(),
+                'line' => $th->getLine(),      // add this
+                'file' => $th->getFile(),      // add this
             ], 500);
         }
     }

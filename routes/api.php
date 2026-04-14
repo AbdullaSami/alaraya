@@ -79,7 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports/generate-share-link', [ReportsController::class, 'GenerateShareLink']);
 });
 
-Route::get('/reports/shared', [ReportsController::class, 'getSharedReport']);
+Route::get('/reports/share-links/{serial}', [ReportsController::class, 'getSharedReport']);
 
 // Ship order number generation
 Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
