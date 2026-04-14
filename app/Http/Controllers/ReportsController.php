@@ -420,9 +420,12 @@ class ReportsController extends Controller
         try {
             $link = ShareLink::where('serial_number', $serial)->firstOrFail();
 
-            $number = $link->body['number'] ?? '';
+            // Ensure body is an array
+            $body = is_array($link->body) ? $link->body : (is_string($link->body) ? json_decode($link->body, true) : []);
+
+            $number = $body['number'] ?? '';
             $number = intval($number);
-            $request->merge($link->body); // now $request has all body fields
+            $request->merge($body); // now $request has all body fields
             switch ($link->type) {
                 case 'vehicle_report':
                     $report = $this->vehicleReport($number ?? '');
