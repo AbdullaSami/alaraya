@@ -6,6 +6,7 @@ use App\Http\Resources\DriverExtraResource;
 use App\Models\DriverExtra;
 use App\Models\VehicleDriverAssignment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DriverExtraController extends Controller
 {
@@ -20,7 +21,7 @@ class DriverExtraController extends Controller
                 'vehicleDriverAssignment.driver',
                 'vehicleDriverAssignment.policy',
                 'vehicleDriverAssignment.policy.shipOrderData',
-                )->get();
+            )->get();
 
             return response()->json(DriverExtraResource::collection($extras), 200);
         } catch (\Exception $e) {
@@ -55,7 +56,6 @@ class DriverExtraController extends Controller
                 'message' => 'Driver extras created successfully',
                 'data' => DriverExtraResource::collection($createdExtras),
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to create driver extras',
@@ -75,7 +75,7 @@ class DriverExtraController extends Controller
                 'vehicleDriverAssignment.driver',
                 'vehicleDriverAssignment.policy',
                 'vehicleDriverAssignment.policy.shipOrderData',
-                )->findOrFail($id);
+            )->findOrFail($id);
 
             return response()->json(new DriverExtraResource($extra), 200);
         } catch (\Exception $e) {
@@ -135,5 +135,32 @@ class DriverExtraController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve extras for assignment', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function settle(Request $request)
+    {
+        $validatedData = $request->validate([
+            'clear_ids'   => 'required|array|min:1',
+            'clear_ids.*' => 'integer|exists:driver_extras,id',
+        ]);
+
+        // Scope to records the current user is authorized to settle.
+        // Adjust the scope (e.g. by driver_id, company_id) to match your auth model.
+        $query = DriverExtra::whereIn('id', $validatedData['clear_ids'])
+            ->where('settled', false); // Avoid redundant updates on already-settled rows
+
+        // Optional: verify all submitted IDs were actually found & eligible
+        $matchedCount = $query->count();
+        if ($matchedCount !== count($validatedData['clear_ids'])) {
+            return response()->json([
+                'message' => 'One or more extras are already settled or not accessible.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($query) {
+            $query->update(['settled' => true]);
+        });
+
+        return response()->json(['message' => 'Driver extras settled successfully'], 200);
     }
 }

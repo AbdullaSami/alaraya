@@ -13,6 +13,7 @@ class DriverExtra extends Model
         'vehicle_driver_assignment_id',
         'extra_amount',
         'extra_type',
+        'settled',
     ];
 
     public function vehicleDriverAssignment()
