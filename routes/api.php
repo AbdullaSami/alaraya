@@ -77,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/get-assignment/ship-order/{shipOrderId}/policy/{policyId}', [PolicyController::class, 'getAssignmentByShipOrderAndPolicy']);
 
     Route::post('/reports/generate-share-link', [ReportsController::class, 'GenerateShareLink']);
-    Route::post('/driver-extras/settle', [DriverExtraController::class, 'settle']);
+    Route::post('/reports/vehicle-statements/clearance', [DriverExtraController::class, 'settle']);
 });
 
 Route::get('/reports/share-links/{serial}', [ReportsController::class, 'getSharedReport']);
