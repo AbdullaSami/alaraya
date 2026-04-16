@@ -142,7 +142,7 @@ class DriverExtraController extends Controller
     {
         $validatedData = $request->validate([
             'clear_ids'   => 'required|array|min:1',
-            'clear_ids.*' => 'integer|exists:driver_extras,id',
+            'clear_ids.*' => 'integer|exists:policies,id',
         ]);
 
         // Scope to records the current user is authorized to settle.
