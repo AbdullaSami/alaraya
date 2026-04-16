@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\DriverExtraResource;
 use App\Models\DriverExtra;
+use App\Models\Policy;
 use App\Models\VehicleDriverAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -146,7 +147,7 @@ class DriverExtraController extends Controller
 
         // Scope to records the current user is authorized to settle.
         // Adjust the scope (e.g. by driver_id, company_id) to match your auth model.
-        $query = DriverExtra::whereIn('id', $validatedData['clear_ids'])
+        $query = Policy::whereIn('id', $validatedData['clear_ids'])
             ->where('settled', false); // Avoid redundant updates on already-settled rows
 
         // Optional: verify all submitted IDs were actually found & eligible

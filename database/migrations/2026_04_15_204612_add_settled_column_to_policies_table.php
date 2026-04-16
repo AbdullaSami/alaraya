@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('driver_extras', function (Blueprint $table) {
+        Schema::table('policies', function (Blueprint $table) {
             $table->boolean('settled')->default(false);
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('driver_extras', function (Blueprint $table) {
+        Schema::table('policies', function (Blueprint $table) {
             $table->dropColumn('settled');
         });
     }
