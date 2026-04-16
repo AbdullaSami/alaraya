@@ -154,7 +154,7 @@ class DriverExtraController extends Controller
         $matchedCount = $query->count();
         if ($matchedCount !== count($validatedData['clear_ids'])) {
             return response()->json([
-                'message' => 'One or more extras are already settled or not accessible.',
+                'message' => 'One or more policies are already settled or not accessible.',
             ], 422);
         }
 
@@ -162,6 +162,6 @@ class DriverExtraController extends Controller
             $query->update(['settled' => true]);
         });
 
-        return response()->json(['message' => 'Driver extras settled successfully'], 200);
+        return response()->json(['message' => 'Policies settled successfully'], 200);
     }
 }
