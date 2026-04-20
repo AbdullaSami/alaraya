@@ -159,7 +159,10 @@ class DriverExtraController extends Controller
         }
 
         DB::transaction(function () use ($query) {
-            $query->update(['settled' => true]);
+            $query->update([
+                'settled' => true,
+                'clearance_date' => now()
+            ]);
         });
 
         return response()->json(['message' => 'Policies settled successfully'], 200);

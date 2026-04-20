@@ -19,6 +19,7 @@ class Policy extends Model
         'policy_aging_date',
         'policy_loading_date',
         'settled',
+        'clearance_date',
     ];
 
     protected $casts = [

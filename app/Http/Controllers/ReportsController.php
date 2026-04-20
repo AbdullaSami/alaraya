@@ -233,6 +233,7 @@ class ReportsController extends Controller
                         return [
                             'policy_number' => $policy->policy_number,
                             'covenant_amount' => $policy->covenant_amount,
+                            'clearance_date' => $policy->clearance_date ?? null,
                             'transport_receipt_details' => [
                                 'army_scales' => $transportReceipt->army_scales,
                                 'roads_and_bridges' => $transportReceipt->roads_and_bridges,
