@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ShipOrderData;
 use App\Models\ShareLink;
+use App\Models\Client;
+use App\Models\Vehicle;
+use App\Models\Drivers;
+use App\Models\ShippingLine;
+use App\Models\Destination;
 
 class ReportsController extends Controller
 {
@@ -284,7 +289,8 @@ class ReportsController extends Controller
                     'total_sum_noloan' => $totalNoloanSum,
                     'total_driver_extras' => $totalDriverExtrasSum,
                     'total_covenant_amount' => $totalCovenantAmountSum,
-                    'net_amount' => $netAmount
+                    'net_amount' => $netAmount,
+                    'policies' => $shipOrders->pluck('policies')->flatten()->unique('id')->values()
                 ]
             ], 200);
         } catch (\Throwable $th) {
@@ -465,5 +471,31 @@ class ReportsController extends Controller
                 'file' => $th->getFile(),
             ], 500);
         }
+    }
+
+    public function dashboard(){
+        $clients = Client::all()->count();
+        $vehicles = Vehicle::all()->count();
+        $drivers = Drivers::all()->count();
+        $shiplines = ShippingLine::all()->count();
+        $destinations = Destination::all()->count();
+
+        $shipOrders = ShipOrderData::all();
+        $shipOrderCount = $shipOrders->count();
+        $todayShipOrders = $shipOrders->where('created_at', '>=', now()->startOfDay());
+        $yesterdayShipOrders = $shipOrders->where('created_at', '>=', now()->subDay()->startOfDay())->where('created_at', '<', now()->startOfDay());
+
+        return response()->json([
+            'clients' => $clients,
+            'vehicles' => $vehicles,
+            'drivers' => $drivers,
+            'shipOrders' => $shipOrderCount,
+            'shiplines' => $shiplines,
+            'destinations' => $destinations,
+            'todayShipOrders' => $todayShipOrders,
+            'yesterdayShipOrders' => $yesterdayShipOrders,
+            'todayShipOrdersCount' => $todayShipOrders->count(),
+            'yesterdayShipOrdersCount' => $yesterdayShipOrders->count(),
+        ]);
     }
 }

@@ -46,11 +46,13 @@ class ShipOrderDataController extends Controller
     public function generateOrderNumber()
     {
         $year = now()->year;
+        $month = now()->month;
+        $day = now()->day;
 
-        return DB::transaction(function () use ($year) {
+        return DB::transaction(function () use ($year, $month, $day) {
 
             // Lock latest row for this year (prevents duplicates)
-            $lastOrder = ShipOrderData::whereYear('created_at', $year)
+            $lastOrder = ShipOrderData::whereDate('created_at', now()->toDateString())
                 ->lockForUpdate()
                 ->orderByDesc('id')
                 ->first();
@@ -60,8 +62,10 @@ class ShipOrderDataController extends Controller
                 : 1;
 
             return sprintf(
-                'ORD-%d-%04d',
+                'ORD-%d-%02d-%02d-%04d',
                 $year,
+                $month,
+                $day,
                 $nextNumber
             );
         });

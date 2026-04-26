@@ -112,3 +112,4 @@ Route::get('/reports/torrents/{number}', [ReportsController::class, 'torrentsRep
 Route::get('/reports/loading-withdrawal/{number}', [ReportsController::class, 'LoadingWithdrawalReport']);
 Route::get('/reports/client-account-statements', [ReportsController::class, 'clientAccountStatements']);
 Route::get('/reports/vehicle-statements', [ReportsController::class, 'vehicleStatement']);
+Route::get('/reports/dashboard', [ReportsController::class, 'dashboard']);
