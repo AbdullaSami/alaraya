@@ -309,7 +309,7 @@ class ReportsController extends Controller
 
                     // فلترة بتاريخ الإنشاء
                     if ($request->filled('from_date') && $request->filled('to_date')) {
-                        $query->whereBetween('created_at', [
+                        $query->whereBetween('clearance_date', [
                             $request->from_date,
                             $request->to_date
                         ]);
