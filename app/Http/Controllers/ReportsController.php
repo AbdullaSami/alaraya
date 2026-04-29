@@ -180,7 +180,22 @@ class ReportsController extends Controller
                             ($receipt->customs_clearance ?? 0) +
                             ($receipt->bill_of_lading_amendment ?? 0) +
                             ($receipt->third_party_vehicle_leave ?? 0) +
-                            ($receipt->brokers ?? 0);
+                            ($receipt->brokers ?? 0) +
+                            ($receipt->vgm ?? 0) +
+                            ($receipt->x_ray ?? 0) +
+                            ($receipt->data_entry ?? 0) +
+                            ($receipt->yard_receipts ?? 0) +
+                            ($receipt->port_authority_receipts ?? 0) +
+                            ($receipt->port_weight_fees ?? 0) +
+                            ($receipt->agency_receipts ?? 0) +
+                            ($receipt->explosives_receipt ?? 0) +
+                            ($receipt->bascule_scale_receipt ?? 0) +
+                            ($receipt->cashier_receipt ?? 0) +
+                            ($receipt->reweighing_receipt ?? 0) +
+                            ($receipt->sina_marine_receipts ?? 0) +
+                            ($receipt->tunnel_ferry_receipts ?? 0) +
+                            ($receipt->container_repair_receipt ?? 0) +
+                            ($receipt->port_receipts ?? 0);
                     }
                 }
                 $totalTransportReceiptsSum += $transportReceiptsSum;
@@ -253,6 +268,21 @@ class ReportsController extends Controller
                                 'bill_of_lading_amendment' => $transportReceipt->bill_of_lading_amendment,
                                 'third_party_vehicle_leave' => $transportReceipt->third_party_vehicle_leave,
                                 'brokers' => $transportReceipt->brokers,
+                                'vgm' => $transportReceipt->vgm,
+                                'x_ray' => $transportReceipt->x_ray,
+                                'data_entry' => $transportReceipt->data_entry,
+                                'yard_receipts' => $transportReceipt->yard_receipts,
+                                'port_authority_receipts' => $transportReceipt->port_authority_receipts,
+                                'port_weight_fees' => $transportReceipt->port_weight_fees,
+                                'agency_receipts' => $transportReceipt->agency_receipts,
+                                'explosives_receipt' => $transportReceipt->explosives_receipt,
+                                'bascule_scale_receipt' => $transportReceipt->bascule_scale_receipt,
+                                'cashier_receipt' => $transportReceipt->cashier_receipt,
+                                'reweighing_receipt' => $transportReceipt->reweighing_receipt,
+                                'sina_marine_receipts' => $transportReceipt->sina_marine_receipts,
+                                'tunnel_ferry_receipts' => $transportReceipt->tunnel_ferry_receipts,
+                                'container_repair_receipt' => $transportReceipt->container_repair_receipt,
+                                'port_receipts' => $transportReceipt->port_receipts,
                             ]
                         ];
                     }),

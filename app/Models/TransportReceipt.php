@@ -25,6 +25,21 @@ class TransportReceipt extends Model
         'bill_of_lading_amendment',
         'third_party_vehicle_leave',
         'brokers',
+        'vgm',
+        'x_ray',
+        'data_entry',
+        'yard_receipts',
+        'port_authority_receipts',
+        'port_weight_fees',
+        'agency_receipts',
+        'explosives_receipt',
+        'bascule_scale_receipt',
+        'cashier_receipt',
+        'reweighing_receipt',
+        'sina_marine_receipts',
+        'tunnel_ferry_receipts',
+        'container_repair_receipt',
+        'port_receipts',
     ];
 
     /**
