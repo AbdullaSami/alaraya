@@ -337,7 +337,7 @@ class ReportsController extends Controller
             $vehicles = ShipOrderData::with([
                 'policies' => function ($query) use ($request) {
 
-                if($request->filled('is_cleared') == true){
+                if($request->input('is_cleared') == true){
                     // فلترة بتاريخ الإنشاء
                     if ($request->filled('from_date') && $request->filled('to_date')) {
                         $query->whereNotNull('clearance_date')
