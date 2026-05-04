@@ -337,13 +337,25 @@ class ReportsController extends Controller
             $vehicles = ShipOrderData::with([
                 'policies' => function ($query) use ($request) {
 
+                if($request->filled('is_cleared') == true){
                     // فلترة بتاريخ الإنشاء
                     if ($request->filled('from_date') && $request->filled('to_date')) {
-                        $query->whereBetween('clearance_date', [
+                        $query->whereNotNull('clearance_date')
+                        ->whereBetween('clearance_date', [
                             $request->from_date,
                             $request->to_date
                         ]);
                     }
+                }else {
+                    // فلترة بتاريخ الإنشاء
+                    if ($request->filled('from_date') && $request->filled('to_date')) {
+                        $query->whereNull('clearance_date')
+                        ->whereBetween('created_at', [
+                            $request->from_date,
+                            $request->to_date
+                        ]);
+                    }
+                }
 
                     // فلترة برقم العربية (داخل العلاقة)
                     if ($request->filled('vehicle_number')) {

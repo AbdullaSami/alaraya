@@ -51,9 +51,8 @@ class ShipOrderDataController extends Controller
 
         return DB::transaction(function () use ($year, $month, $day) {
 
-            // Lock latest row for this year (prevents duplicates)
-            $lastOrder = ShipOrderData::whereDate('created_at', now()->toDateString())
-                ->lockForUpdate()
+            // Lock latest row overall (prevents duplicates)
+            $lastOrder = ShipOrderData::lockForUpdate()
                 ->orderByDesc('id')
                 ->first();
 
