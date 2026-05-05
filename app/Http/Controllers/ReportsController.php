@@ -334,7 +334,7 @@ class ReportsController extends Controller
     public function vehicleStatement(Request $request)
     {
         try {
-            $vehicles = ShipOrderData::with([
+            $query = ShipOrderData::with([
                 'policies' => function ($query) use ($request) {
 
                 if($request->input('is_cleared') == true){
@@ -376,7 +376,41 @@ class ReportsController extends Controller
                 'shipLineClients.client',
                 'shipLineClients.shippingLine',
                 'shipLineClients.destination'
-            ])->get();
+            ]);
+
+            // Add whereHas to filter out ship orders with no policies when using is_cleared filter
+            if ($request->input('is_cleared') == true || $request->input('is_cleared') == false) {
+                $query->whereHas('policies', function ($query) use ($request) {
+                    if($request->input('is_cleared') == true){
+                        // فلترة بتاريخ الإنشاء
+                        if ($request->filled('from_date') && $request->filled('to_date')) {
+                            $query->whereNotNull('clearance_date')
+                            ->whereBetween('clearance_date', [
+                                $request->from_date,
+                                $request->to_date
+                            ]);
+                        }
+                    }else {
+                        // فلترة بتاريخ الإنشاء
+                        if ($request->filled('from_date') && $request->filled('to_date')) {
+                            $query->whereNull('clearance_date')
+                            ->whereBetween('created_at', [
+                                $request->from_date,
+                                $request->to_date
+                            ]);
+                        }
+                    }
+
+                    // فلترة برقم العربية (داخل العلاقة)
+                    if ($request->filled('vehicle_number')) {
+                        $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
+                            $q->where('vehicle_number', $request->vehicle_number);
+                        });
+                    }
+                });
+            }
+
+            $vehicles = $query->get();
 
             // Calculate driver extras total for each vehicle
             $totalNoloanSum = 0;
