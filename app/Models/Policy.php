@@ -53,16 +53,15 @@ class Policy extends Model
 
     public static function generatePolicyNumber()
     {
-        // Lock latest row overall (prevents duplicates)
-        $lastOrder = static::lockForUpdate()
+        $lastPolicy = static::lockForUpdate()
             ->orderByDesc('id')
             ->first();
 
-        $nextNumber = $lastOrder
-            ? ((int) substr($lastOrder->order_number, -4)) + 1
+        $nextNumber = $lastPolicy
+            ? ((int) substr($lastPolicy->policy_number, strrpos($lastPolicy->policy_number, '-') + 1)) + 1
             : 1;
 
-        return "BL-{$nextNumber}";
+        return sprintf("BL-%05d", $nextNumber); // BL-00001, BL-00002, ... BL-99999
     }
 
     public static function boot()
