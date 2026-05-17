@@ -29,4 +29,9 @@ class ShipContainersDetail extends Model
     {
         return $this->hasMany(TorrentContainer::class, 'container_id');
     }
+
+    public function assignmentContainerPivots()
+    {
+        return $this->hasMany(AssignmentContainerPivot::class, 'ship_container_id');
+    }
 }

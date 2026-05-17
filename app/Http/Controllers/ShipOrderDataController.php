@@ -245,12 +245,25 @@ class ShipOrderDataController extends Controller
             'shipLineClients.shippingLine',
             'shipLineClients.destination',
             'shipLineClients.shipLineClientFactories.factory',
-            'shipPolicies.shipContainersDetails',
-            'shipBookings.shipContainersDetails',
+            'shipPolicies.shipContainersDetails.assignmentContainerPivots',
+            'shipBookings.shipContainersDetails.assignmentContainerPivots',
             'shipBookings.clearanceData',
             'shipContactData',
             'treasuries'
         ])->findOrFail($id);
+
+        // Add 'assigned' key to containers
+        foreach ($shipOrderData->shipPolicies as $policy) {
+            foreach ($policy->shipContainersDetails as $container) {
+                $container->assigned = $container->assignmentContainerPivots->isNotEmpty();
+            }
+        }
+
+        foreach ($shipOrderData->shipBookings as $booking) {
+            foreach ($booking->shipContainersDetails as $container) {
+                $container->assigned = $container->assignmentContainerPivots->isNotEmpty();
+            }
+        }
 
         return response()->json([
             'data' => $shipOrderData
