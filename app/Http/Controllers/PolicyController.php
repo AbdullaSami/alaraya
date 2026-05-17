@@ -133,6 +133,7 @@ class PolicyController extends Controller
             'shipOrderData.shipLineClients.client',
             'shipOrderData.shipLineClients.shippingLine',
             'shipOrderData.shipLineClients.destination',
+            'shipOrderData.shipLineClients.shipLineClientFactories.factory',
             'shipOrderData.shipPolicies',
             'shipOrderData.shipBookings',
             'shipOrderData.shipBookings.clearanceData',
