@@ -53,9 +53,16 @@ class Policy extends Model
 
     public static function generatePolicyNumber()
     {
-        $date = now()->format('Ymd');
-        $random = mt_rand(100, 999);
-        return "BL-{$date}-{$random}";
+        // Lock latest row overall (prevents duplicates)
+        $lastOrder = static::lockForUpdate()
+            ->orderByDesc('id')
+            ->first();
+
+        $nextNumber = $lastOrder
+            ? ((int) substr($lastOrder->order_number, -4)) + 1
+            : 1;
+
+        return "BL-{$nextNumber}";
     }
 
     public static function boot()
