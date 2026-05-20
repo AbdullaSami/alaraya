@@ -403,6 +403,7 @@ class ReportsController extends Controller
 
                     // فلترة برقم العربية (داخل العلاقة)
                     if ($request->filled('vehicle_number')) {
+                        dd($request->vehicle_number);
                         $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
                             $q->where('vehicle_number', 'like', "%{$request->vehicle_number}%");
                         });
