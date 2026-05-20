@@ -337,27 +337,24 @@ class ReportsController extends Controller
             $query = ShipOrderData::with([
                 'policies' => function ($query) use ($request) {
 
-                if($request->has('is_cleared') && $request->input('is_cleared') == true){
-                    // فلترة بتاريخ الإنشاء
-                    if ($request->filled('from_date') && $request->filled('to_date')) {
-                        $query->whereNotNull('clearance_date')
-                        ->whereBetween('clearance_date', [
-                            $request->from_date,
-                            $request->to_date
-                        ]);
+                    if ($request->has('is_cleared') && $request->input('is_cleared') == true) {
+                        if ($request->filled('from_date') && $request->filled('to_date')) {
+                            $query->whereNotNull('clearance_date')
+                                ->whereBetween('clearance_date', [
+                                    $request->from_date,
+                                    $request->to_date
+                                ]);
+                        }
+                    } elseif ($request->has('is_cleared') && $request->input('is_cleared') == false) {
+                        if ($request->filled('from_date') && $request->filled('to_date')) {
+                            $query->whereNull('clearance_date')
+                                ->whereBetween('created_at', [
+                                    $request->from_date,
+                                    $request->to_date
+                                ]);
+                        }
                     }
-                }else {
-                    // فلترة بتاريخ الإنشاء
-                    if ($request->filled('from_date') && $request->filled('to_date')) {
-                        $query->whereNull('clearance_date')
-                        ->whereBetween('created_at', [
-                            $request->from_date,
-                            $request->to_date
-                        ]);
-                    }
-                }
 
-                    // فلترة برقم العربية (داخل العلاقة)
                     if ($request->filled('vehicle_number')) {
                         $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
                             $q->where('vehicle_number', 'like', "%{$request->vehicle_number}%");
@@ -378,9 +375,39 @@ class ReportsController extends Controller
                 'shipLineClients.destination'
             ]);
 
+            // ✅ Mirror the same conditions on the parent query to exclude ShipOrders
+            // that have no matching policies after filtering
+            if ($request->has('is_cleared') || $request->filled('vehicle_number') || $request->filled('from_date')) {
+                $query->whereHas('policies', function ($query) use ($request) {
+
+                    if ($request->has('is_cleared') && $request->input('is_cleared') == true) {
+                        if ($request->filled('from_date') && $request->filled('to_date')) {
+                            $query->whereNotNull('clearance_date')
+                                ->whereBetween('clearance_date', [
+                                    $request->from_date,
+                                    $request->to_date
+                                ]);
+                        }
+                    } elseif ($request->has('is_cleared') && $request->input('is_cleared') == false) {
+                        if ($request->filled('from_date') && $request->filled('to_date')) {
+                            $query->whereNull('clearance_date')
+                                ->whereBetween('created_at', [
+                                    $request->from_date,
+                                    $request->to_date
+                                ]);
+                        }
+                    }
+
+                    if ($request->filled('vehicle_number')) {
+                        $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
+                            $q->where('vehicle_number', 'like', "%{$request->vehicle_number}%");
+                        });
+                    }
+                });
+            }
+
             $vehicles = $query->get();
 
-            // Calculate driver extras total for each vehicle
             $totalNoloanSum = 0;
             $totalCovenantAmountSum = 0;
             $totalDriverExtrasSum = 0;
@@ -399,12 +426,10 @@ class ReportsController extends Controller
                     }
                 }
 
-                // Add driver_extras_total, covenant_amount_total, and noloans to the ship order
                 $shipOrder->driver_extras_total = $driverExtrasSum;
                 $shipOrder->covenant_amount_total = $covenantAmountSum;
                 $shipOrder->noloans = $noloans;
 
-                // Accumulate totals
                 $totalNoloanSum += $noloans;
                 $totalCovenantAmountSum += $covenantAmountSum;
                 $totalDriverExtrasSum += $driverExtrasSum;
@@ -412,7 +437,6 @@ class ReportsController extends Controller
                 return $shipOrder;
             });
 
-            // Calculate net amount
             $netAmount = ($totalNoloanSum - $totalCovenantAmountSum) + $totalDriverExtrasSum;
 
             return response()->json([
@@ -456,7 +480,7 @@ class ReportsController extends Controller
 
             return response()->json([
                 'serial' => $link->serial_number,
-                'url'    => "https://port-operations-management-system.vercel.app/reports/share-links/".$link->serial_number,
+                'url'    => "https://port-operations-management-system.vercel.app/reports/share-links/" . $link->serial_number,
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -517,7 +541,8 @@ class ReportsController extends Controller
         }
     }
 
-    public function dashboard(){
+    public function dashboard()
+    {
         $clients = Client::all()->count();
         $vehicles = Vehicle::all()->count();
         $drivers = Drivers::all()->count();
