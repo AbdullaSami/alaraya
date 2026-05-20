@@ -337,7 +337,7 @@ class ReportsController extends Controller
             $query = ShipOrderData::with([
                 'policies' => function ($query) use ($request) {
 
-                if($request->input('is_cleared') == true){
+                if($request->has('is_cleared') && $request->input('is_cleared') == true){
                     // فلترة بتاريخ الإنشاء
                     if ($request->filled('from_date') && $request->filled('to_date')) {
                         $query->whereNotNull('clearance_date')
@@ -377,39 +377,6 @@ class ReportsController extends Controller
                 'shipLineClients.shippingLine',
                 'shipLineClients.destination'
             ]);
-
-            // Add whereHas to filter out ship orders with no policies when using is_cleared filter
-            if ($request->input('is_cleared') == true || $request->input('is_cleared') == false) {
-                $query->whereHas('policies', function ($query) use ($request) {
-                    if($request->input('is_cleared') == true){
-                        // فلترة بتاريخ الإنشاء
-                        if ($request->filled('from_date') && $request->filled('to_date')) {
-                            $query->whereNotNull('clearance_date')
-                            ->whereBetween('clearance_date', [
-                                $request->from_date,
-                                $request->to_date
-                            ]);
-                        }
-                    }else {
-                        // فلترة بتاريخ الإنشاء
-                        if ($request->filled('from_date') && $request->filled('to_date')) {
-                            $query->whereNull('clearance_date')
-                            ->whereBetween('created_at', [
-                                $request->from_date,
-                                $request->to_date
-                            ]);
-                        }
-                    }
-
-                    // فلترة برقم العربية (داخل العلاقة)
-                    if ($request->filled('vehicle_number')) {
-                        dd($request->vehicle_number);
-                        $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
-                            $q->where('vehicle_number', 'like', "%{$request->vehicle_number}%");
-                        });
-                    }
-                });
-            }
 
             $vehicles = $query->get();
 
