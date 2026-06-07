@@ -17,14 +17,15 @@ return new class extends Migration
             $table->enum('order_type', ['import', 'export']);
             $table->text('client_requirements')->nullable();
             $table->unsignedBigInteger('noloans')->default(0);
-            $table->date('shipping_date')->nullable();
-            $table->date('aging_date')->nullable();
+            $table->dateTime('shipping_date')->nullable();
+            $table->dateTime('aging_date')->nullable();
             $table->text('notes')->nullable();
             $table->string('containers_type')->nullable();
             $table->string('containers_number')->nullable();
             $table->string('loading_way')->nullable();
             $table->unsignedBigInteger('transfers_count')->default(1);
             $table->timestamps();
+
         });
     }
 
