@@ -66,7 +66,11 @@ class DriversController extends Controller
      */
     public function destroy(string $id)
     {
+        $user = auth()->user();
         try {
+        if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $driver = Drivers::findOrFail($id);
             $driver->delete();
             return response()->json(['message' => 'Driver deleted successfully'], 200);

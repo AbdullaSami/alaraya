@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+
 class TransportReceiptController extends Controller
 {
     /**
@@ -231,6 +232,10 @@ class TransportReceiptController extends Controller
     public function destroy(string $id): JsonResponse
     {
         try {
+            $user = auth()->user();
+            if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $transportReceipt = TransportReceipt::findOrFail($id);
             $transportReceipt->delete();
 

@@ -85,7 +85,12 @@ class ClientsController extends Controller
      */
     public function destroy(string $id)
     {
+        $user = auth()->user();
         try {
+
+        if (!$user->hasRole('admin')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
             $client = Client::findOrFail($id);
             $client->delete();
             return response()->json(['message' => 'Client deleted successfully'], 200);

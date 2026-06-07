@@ -580,8 +580,12 @@ class ShipOrderDataController extends Controller
      */
     public function destroy($id)
     {
+        $user = auth()->user();
         try {
 
+        if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $shipOrderData = ShipOrderData::findOrFail($id);
 
             DB::transaction(function () use ($shipOrderData) {

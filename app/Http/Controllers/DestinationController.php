@@ -70,7 +70,11 @@ class DestinationController extends Controller
      */
     public function destroy(string $id)
     {
+        $user = auth()->user();
         try {
+        if (!$user->hasRole('admin')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
             $destination = Destination::findOrFail($id);
             $destination->delete();
 

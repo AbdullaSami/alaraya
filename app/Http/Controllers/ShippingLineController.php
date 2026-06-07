@@ -67,6 +67,10 @@ class ShippingLineController extends Controller
      */
     public function destroy(string $id)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('admin')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
         try {
             $shippingLine = ShippingLine::findOrFail($id);
             $shippingLine->delete();

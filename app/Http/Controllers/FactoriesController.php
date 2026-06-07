@@ -81,7 +81,11 @@ class FactoriesController extends Controller
      */
     public function destroy(string $id)
     {
+            $user = auth()->user();
         try {
+        if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $factory = Factory::findOrFail($id);
             $factory->delete();
 

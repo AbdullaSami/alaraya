@@ -84,6 +84,10 @@ class VehicleController extends Controller
     public function destroy(string $id)
     {
         try {
+            $user = auth()->user();
+            if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $vehicle = Vehicle::findOrFail($id);
             $vehicle->delete();
             return response()->json(['message' => 'Vehicle deleted successfully'], 200);

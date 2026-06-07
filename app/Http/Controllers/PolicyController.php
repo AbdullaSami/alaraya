@@ -215,6 +215,10 @@ class PolicyController extends Controller
 
     public function destroy(string $id)
     {
+            $user = auth()->user();
+        if (!$user->hasRole('admin')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
         $policy = Policy::findOrFail($id);
 
         // Delete related vehicle driver assignments first

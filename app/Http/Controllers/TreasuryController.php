@@ -14,7 +14,7 @@ class TreasuryController extends Controller
     public function index()
     {
         $user = auth()->user();
-        try{
+        try {
 
             $query = Treasury::query();
 
@@ -97,6 +97,10 @@ class TreasuryController extends Controller
     public function destroy(Treasury $treasury)
     {
         try {
+            $user = auth()->user();
+            if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $treasury->delete();
             return response()->json(['message' => 'Treasury deleted successfully']);
         } catch (\Exception $e) {

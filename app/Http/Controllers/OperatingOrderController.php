@@ -24,7 +24,7 @@ class OperatingOrderController extends Controller
         try {
             $query = OperatingOrder::query();
 
-            if ($user->can('view_any operating order') || $user->hasRole('admin')) {
+            if ($user->can('view_any operation_orders') || $user->hasRole('admin')) {
                 $orders = $query->with([
                     'shipOrderData',
                     'shipOrderData.policies',
@@ -339,7 +339,12 @@ class OperatingOrderController extends Controller
      */
     public function destroy($operating_order)
     {
+        $user = auth()->user();
         try {
+
+        if (!$user->hasRole('admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             $order = OperatingOrder::findOrFail($operating_order);
 
             DB::transaction(function () use ($order) {
@@ -349,10 +354,12 @@ class OperatingOrderController extends Controller
                 $order->delete();
             });
 
+            DB::commit();
             return response()->json([
                 'message' => 'Operating order deleted successfully'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'error' => 'Failed to delete operating order',
                 'message' => $e->getMessage()
