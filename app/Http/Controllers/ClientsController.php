@@ -38,8 +38,8 @@ class ClientsController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'client_name' => 'required|string|max:255',
-                'contact_number' => 'required|string|max:20',
+                'client_name' => 'required|string|max:255|unique:clients,client_name',
+                'contact_number' => 'required|string|max:20|unique:clients,contact_number',
                 'notes' => 'nullable|string',
             ]);
             $client = Client::create($validatedData);
@@ -63,8 +63,8 @@ class ClientsController extends Controller
         try {
             $client = Client::findOrFail($id);
             $validatedData = $request->validate([
-                'client_name' => 'sometimes|required|string|max:255',
-                'contact_number' => 'sometimes|required|string|max:20',
+                'client_name' => 'sometimes|required|string|max:255|unique:clients,client_name,' . $id,
+                'contact_number' => 'sometimes|required|string|max:20|unique:clients,contact_number,' . $id,
                 'notes' => 'nullable|string',
             ]);
             $client->update($validatedData);

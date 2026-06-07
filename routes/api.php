@@ -33,24 +33,26 @@ use App\Http\Controllers\DriverExtraController;
 Route::post('/login', [AuthController::class, 'login']);
 
 
-Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', function (Request $request) {
-        return response()->json($request->user()->load('roles', 'permissions', 'treasuries'));
-    });
+    Route::prefix('auth')->group(function () {
+        Route::get('/user', function (Request $request) {
+            return response()->json($request->user()->load('roles', 'permissions', 'treasuries'));
+        });
 
-    Route::get('/users', [AuthController::class, 'getUsers']);
-    Route::post('/users', [AuthController::class, 'createUser']);
-    Route::put('/users/{id}', [AuthController::class, 'editUser']);
-    Route::delete('/users/{id}', [AuthController::class, 'deleteUser']);
+        Route::get('/users', [AuthController::class, 'getUsers']);
+        Route::post('/users', [AuthController::class, 'createUser']);
+        Route::put('/users/{id}', [AuthController::class, 'editUser']);
+        Route::delete('/users/{id}', [AuthController::class, 'deleteUser']);
 
-    Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::prefix('roles-permissions')->group(function () {
+        Route::prefix('roles-permissions')->group(function () {
 
-        Route::get('/roles', [RolePermissionController::class, 'roles']);
+            Route::get('/roles', [RolePermissionController::class, 'roles']);
 
-        Route::get('/permissions', [RolePermissionController::class, 'permissions']);
+            Route::get('/permissions', [RolePermissionController::class, 'permissions']);
+        });
     });
 
 
