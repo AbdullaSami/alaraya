@@ -18,15 +18,36 @@ class OperatingOrderController extends Controller
      */
     public function index()
     {
-        $orders = OperatingOrder::with([
-            'shipOrderData',
-            'shipOrderData.policies',
-            'drivers.driver',
-            'vehicles.vehicle',
-            'torrentContainers.container',
-        ])->latest()->get();
 
-        return response()->json($orders);
+        $user = auth()->user();
+
+        try {
+            $query = OperatingOrder::query();
+
+            if ($user->can('view_any operating order') || $user->hasRole('admin')) {
+                $orders = $query->with([
+                    'shipOrderData',
+                    'shipOrderData.policies',
+                    'drivers.driver',
+                    'vehicles.vehicle',
+                    'torrentContainers.container',
+                ])->get();
+            } else {
+                $orders = $query->whereHas('shipOrderData.treasury', function ($q) use ($user) {
+                    $q->where('treasuries.id', $user->treasuries->pluck('id'));
+                })->with([
+                    'shipOrderData',
+                    'shipOrderData.policies',
+                    'drivers.driver',
+                    'vehicles.vehicle',
+                    'torrentContainers.container',
+                ])->get();
+            }
+
+            return response()->json($orders);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**

@@ -32,10 +32,13 @@ use App\Http\Controllers\DriverExtraController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+
 Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
+
     Route::get('/user', function (Request $request) {
         return response()->json($request->user()->load('roles', 'permissions', 'treasuries'));
     });
+
     Route::get('/users', [AuthController::class, 'getUsers']);
     Route::post('/users', [AuthController::class, 'createUser']);
     Route::put('/users/{id}', [AuthController::class, 'editUser']);
@@ -49,17 +52,16 @@ Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
 
         Route::get('/permissions', [RolePermissionController::class, 'permissions']);
     });
-});
 
-Route::apiResource('vehicles', VehicleController::class);
-Route::apiResource('drivers', DriversController::class);
-Route::apiResource('clients', ClientsController::class);
-Route::apiResource('factories', FactoriesController::class);
-Route::apiResource('destinations', DestinationController::class);
-Route::apiResource('shipping-lines', ShippingLineController::class);
 
-// Handel Treasury data methods
-Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('vehicles', VehicleController::class);
+    Route::apiResource('drivers', DriversController::class);
+    Route::apiResource('clients', ClientsController::class);
+    Route::apiResource('factories', FactoriesController::class);
+    Route::apiResource('destinations', DestinationController::class);
+    Route::apiResource('shipping-lines', ShippingLineController::class);
+
+    // Handel Treasury data methods
     Route::apiResource('/treasuries', TreasuryController::class);
     Route::post('/treasury/deposit', [TreasuryOperationsController::class, 'deposit']);
     Route::post('/treasury/send', [TreasuryOperationsController::class, 'send']);
@@ -78,38 +80,38 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/reports/generate-share-link', [ReportsController::class, 'GenerateShareLink']);
     Route::post('/reports/vehicle-statements/clearance', [DriverExtraController::class, 'settle']);
+
+    // Ship order number generation
+    Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
+
+    // Handel ship order data methods
+    Route::apiResource('/ship-order-data', ShipOrderDataController::class);
+
+    // Handel Operating orders data methods
+    Route::apiResource('/operating-orders', OperatingOrderController::class);
+
+    // Policy number generation
+    Route::get('/policy-number', [PolicyController::class, 'generatePolicyNumber']);
+
+    // Get policies by ship order data
+    Route::get('/ship-order-data/{shipOrderDataId}/policies', [PolicyController::class, 'getByShipOrderData']);
+
+    // Vehicle assignment management
+    Route::post('/policies/{policyId}/vehicle-assignments', [PolicyController::class, 'addVehicleAssignment']);
+    Route::put('/vehicle-assignments/{assignmentId}', [PolicyController::class, 'updateVehicleAssignment']);
+    Route::delete('/vehicle-assignments/{assignmentId}', [PolicyController::class, 'removeVehicleAssignment']);
+
+    // Container management for vehicle assignments
+    Route::post('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'addContainersToAssignment']);
+    Route::delete('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'removeContainersFromAssignment']);
+
+    // Reports
+    Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleReport']);
+    Route::get('/reports/torrents/{number}', [ReportsController::class, 'torrentsReports']);
+    Route::get('/reports/loading-withdrawal/{number}', [ReportsController::class, 'LoadingWithdrawalReport']);
+    Route::get('/reports/client-account-statements', [ReportsController::class, 'clientAccountStatements']);
+    Route::get('/reports/vehicle-statements', [ReportsController::class, 'vehicleStatement']);
+    Route::get('/reports/dashboard', [ReportsController::class, 'dashboard']);
 });
 
 Route::get('/reports/share-links/{serial}', [ReportsController::class, 'getSharedReport']);
-
-// Ship order number generation
-Route::get('/ship-order-number', [ShipOrderDataController::class, 'generateOrderNumber']);
-
-// Handel ship order data methods
-Route::apiResource('/ship-order-data', ShipOrderDataController::class);
-
-// Handel Operating orders data methods
-Route::apiResource('/operating-orders', OperatingOrderController::class);
-
-// Policy number generation
-Route::get('/policy-number', [PolicyController::class, 'generatePolicyNumber']);
-
-// Get policies by ship order data
-Route::get('/ship-order-data/{shipOrderDataId}/policies', [PolicyController::class, 'getByShipOrderData']);
-
-// Vehicle assignment management
-Route::post('/policies/{policyId}/vehicle-assignments', [PolicyController::class, 'addVehicleAssignment']);
-Route::put('/vehicle-assignments/{assignmentId}', [PolicyController::class, 'updateVehicleAssignment']);
-Route::delete('/vehicle-assignments/{assignmentId}', [PolicyController::class, 'removeVehicleAssignment']);
-
-// Container management for vehicle assignments
-Route::post('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'addContainersToAssignment']);
-Route::delete('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'removeContainersFromAssignment']);
-
-// Reports
-Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleReport']);
-Route::get('/reports/torrents/{number}', [ReportsController::class, 'torrentsReports']);
-Route::get('/reports/loading-withdrawal/{number}', [ReportsController::class, 'LoadingWithdrawalReport']);
-Route::get('/reports/client-account-statements', [ReportsController::class, 'clientAccountStatements']);
-Route::get('/reports/vehicle-statements', [ReportsController::class, 'vehicleStatement']);
-Route::get('/reports/dashboard', [ReportsController::class, 'dashboard']);

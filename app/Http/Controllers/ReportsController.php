@@ -372,7 +372,9 @@ class ReportsController extends Controller
                 },
                 'shipLineClients.client',
                 'shipLineClients.shippingLine',
-                'shipLineClients.destination'
+                'shipLineClients.destination',
+                'shipLineClients.shipLineClientFactories.factory',
+
             ]);
 
             // ✅ Mirror the same conditions on the parent query to exclude ShipOrders

@@ -21,19 +21,39 @@ class ShipOrderDataController extends Controller
     */
     public function index(Request $request)
     {
-        $shipOrders = ShipOrderData::with([
-            'shipLineClients.client',
-            'shipLineClients.shippingLine',
-            'shipLineClients.destination',
-            'shipLineClients.shipLineClientFactories.factory',
-            'shipPolicies.shipContainersDetails',
-            'shipBookings.shipContainersDetails',
-            'shipBookings.clearanceData',
-            'shipContactData',
-            'treasuries'
-        ])
-            ->latest()
-            ->paginate($request->get('per_page', 15));
+        $user = auth()->user();
+
+        $query = ShipOrderData::query();
+        if($user->can('view_any ship_order_data') ||$user->hasRole('admin')){
+
+            $shipOrders = $query->with([
+                'shipLineClients.client',
+                'shipLineClients.shippingLine',
+                'shipLineClients.destination',
+                'shipLineClients.shipLineClientFactories.factory',
+                'shipPolicies.shipContainersDetails',
+                'shipBookings.shipContainersDetails',
+                'shipBookings.clearanceData',
+                'shipContactData',
+                'treasuries'
+                ])
+                ->latest()
+                ->paginate($request->get('per_page', 15));
+            } else {
+                $shipOrders = $query->whereHas('treasuries', function ($q) use ($user) {
+                    $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
+                })->with([
+                    'shipLineClients.client',
+                    'shipLineClients.shippingLine',
+                    'shipLineClients.destination',
+                    'shipLineClients.shipLineClientFactories.factory',
+                    'shipPolicies.shipContainersDetails',
+                    'shipBookings.shipContainersDetails',
+                    'shipBookings.clearanceData',
+                    'shipContactData',
+                    'treasuries'
+                ])->latest()->paginate($request->get('per_page', 15));
+            }
 
         return response()->json([
             'data' => $shipOrders

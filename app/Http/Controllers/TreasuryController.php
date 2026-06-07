@@ -13,8 +13,19 @@ class TreasuryController extends Controller
      */
     public function index()
     {
+        $user = auth()->user();
         try{
-            $treasuries = Treasury::all();
+
+            $query = Treasury::query();
+
+            if ($user->can('view_any treasury') || $user->hasRole('admin')) {
+                $treasuries = $query->all();
+            } else {
+                $treasuries = $query->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })->get();
+            }
+
             return response()->json($treasuries);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
