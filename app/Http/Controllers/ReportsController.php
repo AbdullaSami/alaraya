@@ -30,6 +30,7 @@ class ReportsController extends Controller
                 ->with('policies.vehicleDriverAssignments.driver')
                 ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
                 ->with('shipLineClients.client')
+                ->with('shipLineClients.shipLineClientFactories.factory')
                 ->get();
             return response()->json(
                 [
@@ -59,6 +60,7 @@ class ReportsController extends Controller
                 ->with('operatingOrder')
                 ->with('operatingOrder.torrentContainers.container')
                 ->with('shipLineClients.client')
+                ->with('shipLineClients.shipLineClientFactories.factory')
                 ->get();
             return response()->json(
                 [
@@ -112,6 +114,7 @@ class ReportsController extends Controller
                 'shipPolicies',
                 'shipBookings',
                 'shipLineClients.client',
+                'shipLineClients.shipLineClientFactories.factory',
                 'operatingOrder',
                 'policies.vehicleDriverAssignments.vehicle',
                 'policies.vehicleDriverAssignments.driver',
@@ -300,6 +303,7 @@ class ReportsController extends Controller
                         return [
                             'client_name' => $shipLineClient->client->client_name ?? null,
                             'contact_number' => $shipLineClient->client->contact_number ?? null,
+                            'factory_name' => $shipLineClient->shipLineClientFactories->factory->factory_name ?? null,
                         ];
                     })
                 ];
