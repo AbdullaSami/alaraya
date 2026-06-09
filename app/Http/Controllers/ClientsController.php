@@ -51,7 +51,7 @@ class ClientsController extends Controller
                 201
             );
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create client'], 500);
+            return response()->json(['error' => 'Failed to create client: '. $e->getMessage()], 500);
         }
     }
 

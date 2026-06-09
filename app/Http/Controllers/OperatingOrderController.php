@@ -33,7 +33,7 @@ class OperatingOrderController extends Controller
                     'torrentContainers.container',
                 ])->get();
             } else {
-                $orders = $query->whereHas('shipOrderData.treasury', function ($q) use ($user) {
+                $orders = $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
                     $q->where('treasuries.id', $user->treasuries->pluck('id'));
                 })->with([
                     'shipOrderData',

@@ -24,7 +24,7 @@ class ShipOrderDataController extends Controller
         $user = auth()->user();
 
         $query = ShipOrderData::query();
-        if($user->can('view_any ship_order_data') ||$user->hasRole('admin')){
+        if ($user->can('view_any ship_order_data') || $user->hasRole('admin')) {
 
             $shipOrders = $query->with([
                 'shipLineClients.client',
@@ -36,24 +36,24 @@ class ShipOrderDataController extends Controller
                 'shipBookings.clearanceData',
                 'shipContactData',
                 'treasuries'
-                ])
+            ])
                 ->latest()
                 ->paginate($request->get('per_page', 15));
-            } else {
-                $shipOrders = $query->whereHas('treasuries', function ($q) use ($user) {
-                    $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
-                })->with([
-                    'shipLineClients.client',
-                    'shipLineClients.shippingLine',
-                    'shipLineClients.destination',
-                    'shipLineClients.shipLineClientFactories.factory',
-                    'shipPolicies.shipContainersDetails',
-                    'shipBookings.shipContainersDetails',
-                    'shipBookings.clearanceData',
-                    'shipContactData',
-                    'treasuries'
-                ])->latest()->paginate($request->get('per_page', 15));
-            }
+        } else {
+            $shipOrders = $query->whereHas('treasuries', function ($q) use ($user) {
+                $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
+            })->with([
+                'shipLineClients.client',
+                'shipLineClients.shippingLine',
+                'shipLineClients.destination',
+                'shipLineClients.shipLineClientFactories.factory',
+                'shipPolicies.shipContainersDetails',
+                'shipBookings.shipContainersDetails',
+                'shipBookings.clearanceData',
+                'shipContactData',
+                'treasuries'
+            ])->latest()->paginate($request->get('per_page', 15));
+        }
 
         return response()->json([
             'data' => $shipOrders
@@ -406,7 +406,7 @@ class ShipOrderDataController extends Controller
                 }
 
                 // =========================
-                // Update Policies
+                // Update Ship Policies
                 // =========================
                 if (isset($validatedData['policies'])) {
                     // Get existing policy numbers for this ship order
@@ -583,7 +583,7 @@ class ShipOrderDataController extends Controller
         $user = auth()->user();
         try {
 
-        if (!$user->hasRole('admin')) {
+            if (!$user->hasRole('admin')) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
             $shipOrderData = ShipOrderData::findOrFail($id);

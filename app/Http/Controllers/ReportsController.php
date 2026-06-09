@@ -26,6 +26,7 @@ class ReportsController extends Controller
 
             $report = ShipOrderData::query()
                 ->where('order_number', 'LIKE', "%{$searchValue}%")
+                ->with('operatingOrder')
                 ->with('policies.vehicleDriverAssignments.vehicle')
                 ->with('policies.vehicleDriverAssignments.driver')
                 ->with('policies.vehicleDriverAssignments.shipContainers.torrentContainers')
