@@ -12,24 +12,51 @@ class PolicyController extends Controller
 {
     public function index()
     {
-        $policies = Policy::with([
-            // ship order data and its related data
-            'shipOrderData',
-            'shipOrderData.shipLineClients',
-            'shipOrderData.shipPolicies',
-            'shipOrderData.shipPolicies.shipContainersDetails',
-            'shipOrderData.shipBookings',
-            'shipOrderData.shipBookings.clearanceData',
-            'shipOrderData.shipBookings.shipContainersDetails',
-            'shipOrderData.shipContactData',
-            // operating order and its related data
-            'operatingOrder',
-            'vehicleDriverAssignments',
-            'vehicleDriverAssignments.vehicle',
-            'vehicleDriverAssignments.driver',
-            'vehicleDriverAssignments.shipContainers'
-        ])->get();
-        return response()->json($policies);
+        $user = auth()->user();
+        $query = Policy::query();
+        try {
+            if ($user->can('view_any policies') || $user->hasRole('admin')) {
+            $policies = $query->with([
+                // ship order data and its related data
+                'shipOrderData',
+                'shipOrderData.shipLineClients',
+                'shipOrderData.shipPolicies',
+                'shipOrderData.shipPolicies.shipContainersDetails',
+                'shipOrderData.shipBookings',
+                'shipOrderData.shipBookings.clearanceData',
+                'shipOrderData.shipBookings.shipContainersDetails',
+                'shipOrderData.shipContactData',
+                // operating order and its related data
+                'operatingOrder',
+                'vehicleDriverAssignments',
+                'vehicleDriverAssignments.vehicle',
+                'vehicleDriverAssignments.driver',
+                'vehicleDriverAssignments.shipContainers'
+            ])->get();
+            } else {
+                $policies = $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
+                    $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
+                })->with([
+                    'shipOrderData',
+                    'shipOrderData.shipLineClients',
+                    'shipOrderData.shipPolicies',
+                    'shipOrderData.shipPolicies.shipContainersDetails',
+                    'shipOrderData.shipBookings',
+                    'shipOrderData.shipBookings.clearanceData',
+                    'shipOrderData.shipBookings.shipContainersDetails',
+                    'shipOrderData.shipContactData',
+                    // operating order and its related data
+                    'operatingOrder',
+                    'vehicleDriverAssignments',
+                    'vehicleDriverAssignments.vehicle',
+                    'vehicleDriverAssignments.driver',
+                    'vehicleDriverAssignments.shipContainers'
+                ])->get();
+            }
+            return response()->json($policies);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to retrieve policies: ' . $e->getMessage()], 500);
+        }
     }
 
     public function create()
@@ -42,36 +69,36 @@ class PolicyController extends Controller
     {
         try {
             $validated = $request->validate([
-            'ship_order_data_id' => 'required|exists:ship_order_data,id',
-            'operating_order_id' => 'required|exists:operating_orders,id',
-            'covenant_amount' => 'nullable|numeric|min:0',
-            'policy_type' => 'boolean',
-            'policy_aging_date' => 'required_if:policy_type,true|nullable|string',
-            'policy_loading_date' => 'required_if:policy_type,true|nullable|string',
-            'vehicle_driver_assignments' => 'required|array|min:1',
-            'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
-            'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
-            'vehicle_driver_assignments.*.ship_container_ids' => 'nullable|array',
-            'vehicle_driver_assignments.*.ship_container_ids.*' => 'nullable|exists:ship_containers_details,id',
-        ]);
+                'ship_order_data_id' => 'required|exists:ship_order_data,id',
+                'operating_order_id' => 'required|exists:operating_orders,id',
+                'covenant_amount' => 'nullable|numeric|min:0',
+                'policy_type' => 'boolean',
+                'policy_aging_date' => 'required_if:policy_type,true|nullable|string',
+                'policy_loading_date' => 'required_if:policy_type,true|nullable|string',
+                'vehicle_driver_assignments' => 'required|array|min:1',
+                'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
+                'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
+                'vehicle_driver_assignments.*.ship_container_ids' => 'nullable|array',
+                'vehicle_driver_assignments.*.ship_container_ids.*' => 'nullable|exists:ship_containers_details,id',
+            ]);
 
-        $shipOrderData = ShipOrderData::findOrFail($validated['ship_order_data_id']);
+            $shipOrderData = ShipOrderData::findOrFail($validated['ship_order_data_id']);
 
-        if (!$shipOrderData->canCreateMorePolicies()) {
-            return response()->json([
-                'message' => 'Cannot create more policies. Maximum limit of ' . $shipOrderData->transfers_count . ' policies reached.',
-                'remaining_slots' => $shipOrderData->remainingPolicySlots()
-            ], 422);
-        }
+            if (!$shipOrderData->canCreateMorePolicies()) {
+                return response()->json([
+                    'message' => 'Cannot create more policies. Maximum limit of ' . $shipOrderData->transfers_count . ' policies reached.',
+                    'remaining_slots' => $shipOrderData->remainingPolicySlots()
+                ], 422);
+            }
 
-        // Create policy
-        $policyData = $request->only([
-            'ship_order_data_id',
-            'operating_order_id',
-            'covenant_amount',
-            'policy_type',
-            'policy_aging_date',
-            'policy_loading_date'
+            // Create policy
+            $policyData = $request->only([
+                'ship_order_data_id',
+                'operating_order_id',
+                'covenant_amount',
+                'policy_type',
+                'policy_aging_date',
+                'policy_loading_date'
             ]);
 
 
@@ -81,7 +108,7 @@ class PolicyController extends Controller
             $treasury = $shipOrderData->treasuries()->first();
             if ($treasury) {
 
-                        if ($treasury) {
+                if ($treasury) {
                     $treasury->balance -= $policyData['covenant_amount'] ?? 0;
                     $treasury->save();
 
@@ -94,34 +121,34 @@ class PolicyController extends Controller
                 }
             }
 
-        // Create vehicle driver assignments with multiple containers
-        $assignments = [];
-        if (isset($validated['vehicle_driver_assignments'])) {
-        foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
-            $assignment = VehicleDriverAssignment::create([
-                'vehicle_id' => $assignmentData['vehicle_id'],
-                'driver_id' => $assignmentData['driver_id'],
-                'policy_id' => $policy->id,
-            ]);
+            // Create vehicle driver assignments with multiple containers
+            $assignments = [];
+            if (isset($validated['vehicle_driver_assignments'])) {
+                foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
+                    $assignment = VehicleDriverAssignment::create([
+                        'vehicle_id' => $assignmentData['vehicle_id'],
+                        'driver_id' => $assignmentData['driver_id'],
+                        'policy_id' => $policy->id,
+                    ]);
 
-            if (isset($assignmentData['ship_container_ids'])) {
-                // Attach multiple ship containers to the assignment
-                $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+                    if (isset($assignmentData['ship_container_ids'])) {
+                        // Attach multiple ship containers to the assignment
+                        $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+                    }
+                    $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
+                }
             }
-            $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
-        }
-        }
 
-        return response()->json([
-            'message' => 'Policy created successfully with vehicle assignments and containers',
-            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
-        ], 201);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Failed to create policy',
-            'error' => $e->getMessage()
-        ], 500);
-    }
+            return response()->json([
+                'message' => 'Policy created successfully with vehicle assignments and containers',
+                'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create policy',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(string $id)
@@ -215,7 +242,7 @@ class PolicyController extends Controller
 
     public function destroy(string $id)
     {
-            $user = auth()->user();
+        $user = auth()->user();
         if (!$user->hasRole('admin')) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
