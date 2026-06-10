@@ -74,7 +74,9 @@ class TransportReceiptController extends Controller
                 if ($policy->settled || $policy->transportReceipts != null) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'This policy is already settled or has an associated transport receipt, cannot create a new one.'
+                        'message' => '
+                        هذه الوثيقة تمت تسويتها مسبقًا أو لديها إيصال نقل مرتبط بها، لذا لا يمكن إنشاء إيصال نقل جديد.
+                        '
                     ], 400);
                 }
             }
