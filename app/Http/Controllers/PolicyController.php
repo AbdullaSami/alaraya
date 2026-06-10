@@ -313,7 +313,7 @@ class PolicyController extends Controller
 
         $policy = Policy::findOrFail($policyId);
 
-        if($policy->vehicleDriverAssignments() != null) {
+        if ($policy->vehicleDriverAssignments()->exists()) {
             return response()->json([
                 'message' => '
                 لا يُسمح بربط أكثر من مركبة واحدة بالوثيقة الواحدة.

@@ -209,7 +209,8 @@ class ReportsController extends Controller
                 // Calculate driver extras sum for this ship order
                 $driverExtrasSum = 0;
                 foreach ($shipOrder->policies as $policy) {
-                    foreach ($policy->vehicleDriverAssignments as $assignment) {
+                    $assignment = $policy->vehicleDriverAssignments;
+                    if ($assignment) {
                         foreach ($assignment->driverExtras as $extra) {
                             $driverExtrasSum += ($extra->extra_amount ?? 0);
                         }
@@ -292,21 +293,25 @@ class ReportsController extends Controller
                             ]
                         ];
                     }),
-                    'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function ($policy) {
-                        return $policy->vehicleDriverAssignments->map(function ($assignment) {
+                    'vehicle_driver_assignments' => $shipOrder->policies->map(function ($policy) {
+                        $assignment = $policy->vehicleDriverAssignments;
+                        if ($assignment) {
                             return [
                                 'id' => $assignment->id,
                                 'vehicle_info' => $assignment->vehicle ?? null,
                                 'driver_info' => $assignment->driver ?? null,
                                 'driver_extras' => $assignment->driverExtras ?? null,
                             ];
-                        });
-                    })->unique('id')->values(),
+                        }
+                        return null;
+                    })->filter()->unique('id')->values(),
                     'clients' => $shipOrder->shipLineClients->map(function ($shipLineClient) {
                         return [
                             'client_name' => $shipLineClient->client->client_name ?? null,
                             'contact_number' => $shipLineClient->client->contact_number ?? null,
-                            'factory_name' => $shipLineClient->shipLineClientFactories->factory->factory_name ?? null,
+                            'factory_name' => $shipLineClient->shipLineClientFactories->map(function ($f) {
+                                return $f->factory->factory_name ?? null;
+                            })->filter()->implode(', ') ?: null,
                         ];
                     })
                 ];
@@ -428,7 +433,8 @@ class ReportsController extends Controller
 
                 foreach ($shipOrder->policies as $policy) {
                     $covenantAmountSum += ($policy->covenant_amount ?? 0);
-                    foreach ($policy->vehicleDriverAssignments as $assignment) {
+                    $assignment = $policy->vehicleDriverAssignments;
+                    if ($assignment) {
                         foreach ($assignment->driverExtras as $extra) {
                             $driverExtrasSum += ($extra->extra_amount ?? 0);
                         }
