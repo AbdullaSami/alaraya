@@ -48,7 +48,7 @@ class Policy extends Model
 
     public function vehicleDriverAssignments()
     {
-        return $this->hasMany(VehicleDriverAssignment::class);
+        return $this->belongsTo(VehicleDriverAssignment::class);
     }
 
     public static function generatePolicyNumber()
