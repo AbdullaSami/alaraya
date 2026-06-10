@@ -34,7 +34,7 @@ class Policy extends Model
     }
     public function transportReceipts()
     {
-        return $this->belongsTo(TransportReceipt::class);
+        return $this->hasOne(TransportReceipt::class);
     }
     public function shipOrderData()
     {
@@ -48,7 +48,7 @@ class Policy extends Model
 
     public function vehicleDriverAssignments()
     {
-        return $this->belongsTo(VehicleDriverAssignment::class);
+        return $this->hasOne(VehicleDriverAssignment::class);
     }
 
     public static function generatePolicyNumber()
