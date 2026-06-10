@@ -34,7 +34,7 @@ class Policy extends Model
     }
     public function transportReceipts()
     {
-        return $this->hasMany(TransportReceipt::class);
+        return $this->belongsTo(TransportReceipt::class);
     }
     public function shipOrderData()
     {
