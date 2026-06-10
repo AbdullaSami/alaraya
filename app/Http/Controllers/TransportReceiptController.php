@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TransportReceipt;
+use App\Models\Policy;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -67,6 +68,16 @@ class TransportReceiptController extends Controller
                 'container_repair_receipt' => 'nullable|numeric|min:0',
                 'port_receipts' => 'nullable|numeric|min:0',
             ]);
+
+            if(isset($validated['policy_id'])) {
+                $policy = Policy::find($validated['policy_id']);
+                if ($policy->settled || $policy->transportReceipts != null) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This policy is already settled or has an associated transport receipt, cannot create a new one.'
+                    ], 400);
+                }
+            }
 
             $total = collect($validated)->only([
                 'army_scales',
