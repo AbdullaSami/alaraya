@@ -313,6 +313,14 @@ class PolicyController extends Controller
 
         $policy = Policy::findOrFail($policyId);
 
+        if($policy->vehicleDriverAssignments() != null) {
+            return response()->json([
+                'message' => '
+                لا يُسمح بربط أكثر من مركبة واحدة بالوثيقة الواحدة.
+                '
+            ], 422);
+        }
+
         $assignment = VehicleDriverAssignment::create([
             'vehicle_id' => $validated['vehicle_id'],
             'driver_id' => $validated['driver_id'],
