@@ -18,7 +18,7 @@ class DriverExtra extends Model
 
     public function vehicleDriverAssignment()
     {
-        return $this->belongsTo(VehicleDriverAssignment::class);
+        return $this->hasOne(VehicleDriverAssignment::class);
     }
 
     public function shipOrderData()
