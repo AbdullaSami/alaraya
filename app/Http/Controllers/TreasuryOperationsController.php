@@ -118,7 +118,7 @@ class TreasuryOperationsController extends Controller
         $validatedData = $request->validate([
             'treasury_id' => 'required|exists:treasuries,id',
             'amount' => 'required|numeric|min:0.01',
-            'reason' => 'nullable|string|max:255',
+            'reason' => 'nullable|string',
             'type' => 'required|string|max:255',
         ]);
 
