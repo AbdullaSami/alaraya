@@ -115,7 +115,7 @@ class TransportReceiptController extends Controller
 
             $shipOrder = $transportReceipt->shipOrder;
             $treasury = $shipOrder->treasuries()->first();
-            if ($treasury) {
+            if ($treasury && $treasury->balance >= $total) {
                 $treasury->balance -= $total;
                 $treasury->save();
 
@@ -125,6 +125,8 @@ class TransportReceiptController extends Controller
                     'reason' => 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
                     'type' => 'transport_receipt',
                 ]);
+            }else{
+                return "الرصيد غير كافٍ أو لم يتم تعيين خزينة"
             }
             return response()->json([
                 'success' => true,
