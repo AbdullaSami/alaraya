@@ -106,15 +106,23 @@ class PolicyController extends Controller
             $policyData['user_id'] = auth()->id(); // Assuming you want to associate the policy with the authenticated user
             $policy = Policy::create($policyData);
             $treasury = $shipOrderData->treasuries()->first();
-            if ($treasury) {
 
-                if ($treasury) {
-                    $treasury->balance -= $policyData['covenant_amount'] ?? 0;
+            if ($treasury) {
+                $covenantAmount = $policyData['covenant_amount'] ?? 0;
+
+                if ($covenantAmount > 0) {
+                    if ($treasury->balance < $covenantAmount) {
+                        return response()->json([
+                            'message' => 'الرصيد غير كافٍ في الخزينة'
+                        ], 400);
+                    }
+
+                    $treasury->balance -= $covenantAmount;
                     $treasury->save();
 
                     $treasury->deductions()->create([
                         'user_id' => $policyData['user_id'],
-                        'amount' => $policyData['covenant_amount'] ?? 0,
+                        'amount' => $covenantAmount,
                         'reason' => 'مصاريف العهدة لوثيقة رقم #' . $policy->policy_number,
                         'type' => 'transport_receipt',
                     ]);

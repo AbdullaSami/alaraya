@@ -115,19 +115,30 @@ class TransportReceiptController extends Controller
 
             $shipOrder = $transportReceipt->shipOrder;
             $treasury = $shipOrder->treasuries()->first();
-            if ($treasury && $treasury->balance >= $total) {
-                $treasury->balance -= $total;
-                $treasury->save();
 
-                $treasury->deductions()->create([
-                    'user_id' => $userId,
-                    'amount' => $total,
-                    'reason' => 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
-                    'type' => 'transport_receipt',
-                ]);
-            }else{
-                return "الرصيد غير كافٍ أو لم يتم تعيين خزينة"
+            if (!$treasury) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لم يتم تعيين خزينة لطلب الشحن'
+                ], 400);
             }
+
+            if ($treasury->balance < $total) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الرصيد غير كافٍ في الخزينة'
+                ], 400);
+            }
+
+            $treasury->balance -= $total;
+            $treasury->save();
+
+            $treasury->deductions()->create([
+                'user_id' => $userId,
+                'amount' => $total,
+                'reason' => 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
+                'type' => 'transport_receipt',
+            ]);
             return response()->json([
                 'success' => true,
                 'message' => 'Transport receipt created successfully',
