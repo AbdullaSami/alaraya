@@ -6,7 +6,7 @@ use App\Models\Policy;
 use App\Models\ShipOrderData;
 use App\Models\VehicleDriverAssignment;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class PolicyController extends Controller
 {
@@ -91,6 +91,7 @@ class PolicyController extends Controller
                 ], 422);
             }
 
+            DB::beginTransaction();
             // Create policy
             $policyData = $request->only([
                 'ship_order_data_id',
@@ -147,11 +148,14 @@ class PolicyController extends Controller
                 }
             }
 
+            DB::commit();
+
             return response()->json([
                 'message' => 'Policy created successfully with vehicle assignments and containers',
                 'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Failed to create policy',
                 'error' => $e->getMessage()
