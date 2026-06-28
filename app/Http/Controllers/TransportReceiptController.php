@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\DB;
 class TransportReceiptController extends Controller
 {
     /**
@@ -69,7 +69,8 @@ class TransportReceiptController extends Controller
                 'port_receipts' => 'nullable|numeric|min:0',
             ]);
 
-            if(isset($validated['policy_id'])) {
+            DB::beginTransaction();
+            if (isset($validated['policy_id'])) {
                 $policy = Policy::find($validated['policy_id']);
                 if ($policy->settled || $policy->transportReceipts != null) {
                     return response()->json([
@@ -139,18 +140,22 @@ class TransportReceiptController extends Controller
                 'reason' => 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
                 'type' => 'transport_receipt',
             ]);
+            DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => 'Transport receipt created successfully',
                 'data' => $transportReceipt->load('shipOrder')
             ], 201);
         } catch (ValidationException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create transport receipt',
