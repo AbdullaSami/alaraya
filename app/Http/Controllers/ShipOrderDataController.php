@@ -296,11 +296,9 @@ class ShipOrderDataController extends Controller
     public function update(Request $request, $id)
     {
         try {
-
             $shipOrderData = ShipOrderData::findOrFail($id);
 
             $validatedData = $request->validate([
-
                 'order_number' => 'required|string|unique:ship_order_data,order_number,' . $shipOrderData->id,
                 'order_type' => 'required|in:import,export',
                 'client_requirements' => 'nullable|string',
@@ -314,34 +312,28 @@ class ShipOrderDataController extends Controller
                 'handel_way' => 'nullable|string',
                 'transfers_count' => 'nullable|integer',
 
-                // Ship Line Client Data
                 'client_id' => 'required|exists:clients,id',
                 'shipping_line_id' => 'required|exists:shipping_lines,id',
                 'destination_id' => 'required|exists:destinations,id',
 
-                // Factories (array)
                 'factories' => 'required|array|min:1',
                 'factories.*.factory_id' => 'required|exists:factories,id',
 
-                // Ship Policies (array) - mutually exclusive with bookings
                 'policies' => 'required_without:bookings|array|min:1',
                 'policies.*.policy_number' => 'required|string',
                 'policies.*.containers' => 'sometimes|array',
                 'policies.*.containers.*.container_number' => 'sometimes|string',
 
-                // Ship Bookings (array) - mutually exclusive with policies
                 'bookings' => 'required_without:policies|array|min:1',
                 'bookings.*.booking_number' => 'required|string',
                 'bookings.*.containers' => 'sometimes|array',
                 'bookings.*.containers.*.container_number' => 'sometimes|string',
 
-                // Ship Contact Data
                 'contact_loading_name' => 'required|string',
                 'contact_loading_number' => 'required|string',
                 'contact_customs_officer_name' => 'required|string',
                 'contact_customs_officer_number' => 'required|string',
 
-                // Clearance Data (optional)
                 'clearance_data' => 'nullable|array',
                 'clearance_data.clearance_type' => 'nullable|string',
                 'clearance_data.customs_location' => 'nullable|string',
@@ -355,20 +347,20 @@ class ShipOrderDataController extends Controller
                 // Update Ship Order
                 // =========================
                 $shipOrderData->update([
-                    'order_number' => $validatedData['order_number'],
-                    'order_type' => $validatedData['order_type'],
+                    'order_number'        => $validatedData['order_number'],
+                    'order_type'          => $validatedData['order_type'],
                     'client_requirements' => $validatedData['client_requirements'] ?? null,
-                    'noloans' => $validatedData['noloans'] ?? 0,
-                    'shipping_date' => $validatedData['shipping_date'] ?? null,
-                    'aging_date' => $validatedData['aging_date'] ?? null,
-                    'notes' => $validatedData['notes'] ?? null,
-                    'containers_type' => $validatedData['containers_type'] ?? null,
-                    'containers_number' => $validatedData['containers_number'] ?? null,
-                    'loading_way' => $validatedData['loading_way'] ?? null,
-                    'transfers_count' => $validatedData['transfers_count'] ?? 1,
+                    'noloans'             => $validatedData['noloans'] ?? 0,
+                    'shipping_date'       => $validatedData['shipping_date'] ?? null,
+                    'aging_date'          => $validatedData['aging_date'] ?? null,
+                    'notes'               => $validatedData['notes'] ?? null,
+                    'containers_type'     => $validatedData['containers_type'] ?? null,
+                    'containers_number'   => $validatedData['containers_number'] ?? null,
+                    'loading_way'         => $validatedData['loading_way'] ?? null,
+                    'transfers_count'     => $validatedData['transfers_count'] ?? 1,
                 ]);
 
-                // Update treasury relationship
+                // Sync treasury (non-destructive: sync replaces pivot rows only, IDs are stable)
                 if (isset($validatedData['treasury_id'])) {
                     $shipOrderData->treasuries()->sync($validatedData['treasury_id']);
                 }
@@ -379,152 +371,92 @@ class ShipOrderDataController extends Controller
                 $shipLineClient = ShipLineClient::where('ship_order_data_id', $shipOrderData->id)->first();
 
                 $shipLineClient->update([
-                    'client_id' => $validatedData['client_id'],
+                    'client_id'       => $validatedData['client_id'],
                     'shipping_line_id' => $validatedData['shipping_line_id'],
-                    'destination_id' => $validatedData['destination_id'],
+                    'destination_id'  => $validatedData['destination_id'],
                 ]);
 
-                // Sync factories
-                $factoryIds = collect($validatedData['factories'])->pluck('factory_id')->toArray();
+                // =========================
+                // Sync Factories — add only, never delete
+                // =========================
+                $incomingFactoryIds = collect($validatedData['factories'])->pluck('factory_id')->toArray();
                 $existingFactoryIds = $shipLineClient->shipLineClientFactories()->pluck('factory_id')->toArray();
 
-                // Delete factories not in the new list
-                $factoriesToDelete = array_diff($existingFactoryIds, $factoryIds);
-                if (!empty($factoriesToDelete)) {
-                    ShipLineClientFactory::where('ship_line_client_id', $shipLineClient->id)
-                        ->whereIn('factory_id', $factoriesToDelete)
-                        ->delete();
-                }
-
-                // Add new factories
-                $factoriesToAdd = array_diff($factoryIds, $existingFactoryIds);
+                $factoriesToAdd = array_diff($incomingFactoryIds, $existingFactoryIds);
                 foreach ($factoriesToAdd as $factoryId) {
                     ShipLineClientFactory::create([
                         'ship_line_client_id' => $shipLineClient->id,
-                        'factory_id' => $factoryId,
+                        'factory_id'          => $factoryId,
                     ]);
                 }
 
                 // =========================
-                // Update Ship Policies
+                // Update Ship Policies — upsert only, never delete
                 // =========================
                 if (isset($validatedData['policies'])) {
-                    // Get existing policy numbers for this ship order
-                    $existingPolicyNumbers = ShipPolicy::where('ship_order_data_id', $shipOrderData->id)
-                        ->pluck('policy_number')
-                        ->toArray();
-
-                    // Get new policy numbers from request
-                    $newPolicyNumbers = collect($validatedData['policies'])->pluck('policy_number')->toArray();
-
-                    // Delete policies that are not in the new list
-                    $policiesToDelete = array_diff($existingPolicyNumbers, $newPolicyNumbers);
-                    if (!empty($policiesToDelete)) {
-                        $policyIdsToDelete = ShipPolicy::where('ship_order_data_id', $shipOrderData->id)
-                            ->whereIn('policy_number', $policiesToDelete)
-                            ->pluck('id');
-                        ShipContainersDetail::whereIn('policy_id', $policyIdsToDelete)->delete();
-                        ShipPolicy::whereIn('id', $policyIdsToDelete)->delete();
-                    }
-
-                    // Update or create policies
                     foreach ($validatedData['policies'] as $policyData) {
-                        $policy = ShipPolicy::where('ship_order_data_id', $shipOrderData->id)
-                            ->where('policy_number', $policyData['policy_number'])
-                            ->first();
-
-                        if (!$policy) {
-                            $policy = ShipPolicy::create([
+                        // firstOrCreate keeps the existing ID if already present
+                        $policy = ShipPolicy::firstOrCreate(
+                            [
                                 'ship_order_data_id' => $shipOrderData->id,
-                                'policy_number' => $policyData['policy_number'],
-                            ]);
-                        }
+                                'policy_number'      => $policyData['policy_number'],
+                            ]
+                        );
 
-                        // Sync containers for this policy
+                        // Sync containers — add only, never delete
                         if (isset($policyData['containers'])) {
-                            $containerNumbers = collect($policyData['containers'])->pluck('container_number')->toArray();
+                            $existingContainerNumbers = ShipContainersDetail::where('policy_id', $policy->id)
+                                ->pluck('container_number')
+                                ->toArray();
 
-                            // Delete containers not in the new list
-                            ShipContainersDetail::where('policy_id', $policy->id)
-                                ->whereNotIn('container_number', $containerNumbers)
-                                ->delete();
-
-                            // Add new containers
                             foreach ($policyData['containers'] as $containerData) {
-                                ShipContainersDetail::firstOrCreate(
-                                    [
-                                        'policy_id' => $policy->id,
-                                        'container_number' => $containerData['container_number']
-                                    ]
-                                );
+                                if (!in_array($containerData['container_number'], $existingContainerNumbers)) {
+                                    ShipContainersDetail::create([
+                                        'policy_id'        => $policy->id,
+                                        'container_number' => $containerData['container_number'],
+                                    ]);
+                                }
                             }
                         }
                     }
                 }
 
                 // =========================
-                // Update Bookings
+                // Update Bookings — upsert only, never delete
                 // =========================
                 if (isset($validatedData['bookings'])) {
-                    // Get existing booking numbers for this ship order
-                    $existingBookingNumbers = ShipBooking::where('ship_order_data_id', $shipOrderData->id)
-                        ->pluck('booking_number')
-                        ->toArray();
-
-                    // Get new booking numbers from request
-                    $newBookingNumbers = collect($validatedData['bookings'])->pluck('booking_number')->toArray();
-
-                    // Delete bookings that are not in the new list
-                    $bookingsToDelete = array_diff($existingBookingNumbers, $newBookingNumbers);
-                    if (!empty($bookingsToDelete)) {
-                        $bookingIdsToDelete = ShipBooking::where('ship_order_data_id', $shipOrderData->id)
-                            ->whereIn('booking_number', $bookingsToDelete)
-                            ->pluck('id');
-                        ShipContainersDetail::whereIn('booking_id', $bookingIdsToDelete)->delete();
-                        ClearanceData::whereIn('booking_id', $bookingIdsToDelete)->delete();
-                        ShipBooking::whereIn('id', $bookingIdsToDelete)->delete();
-                    }
-
-                    // Update or create bookings
                     foreach ($validatedData['bookings'] as $bookingData) {
-                        $booking = ShipBooking::where('ship_order_data_id', $shipOrderData->id)
-                            ->where('booking_number', $bookingData['booking_number'])
-                            ->first();
-
-                        if (!$booking) {
-                            $booking = ShipBooking::create([
+                        // firstOrCreate keeps the existing ID if already present
+                        $booking = ShipBooking::firstOrCreate(
+                            [
                                 'ship_order_data_id' => $shipOrderData->id,
-                                'booking_number' => $bookingData['booking_number'],
-                            ]);
-                        }
+                                'booking_number'     => $bookingData['booking_number'],
+                            ]
+                        );
 
-                        // Sync containers for this booking
+                        // Sync containers — add only, never delete
                         if (isset($bookingData['containers'])) {
-                            $containerNumbers = collect($bookingData['containers'])->pluck('container_number')->toArray();
+                            $existingContainerNumbers = ShipContainersDetail::where('booking_id', $booking->id)
+                                ->pluck('container_number')
+                                ->toArray();
 
-                            // Delete containers not in the new list
-                            ShipContainersDetail::where('booking_id', $booking->id)
-                                ->whereNotIn('container_number', $containerNumbers)
-                                ->delete();
-
-                            // Add new containers
                             foreach ($bookingData['containers'] as $containerData) {
-                                ShipContainersDetail::firstOrCreate(
-                                    [
-                                        'booking_id' => $booking->id,
-                                        'container_number' => $containerData['container_number']
-                                    ]
-                                );
+                                if (!in_array($containerData['container_number'], $existingContainerNumbers)) {
+                                    ShipContainersDetail::create([
+                                        'booking_id'       => $booking->id,
+                                        'container_number' => $containerData['container_number'],
+                                    ]);
+                                }
                             }
                         }
 
-                        // Update or create Clearance Data if provided
+                        // Upsert Clearance Data — updateOrCreate is safe (preserves ID on update)
                         if (!empty($validatedData['clearance_data'])) {
                             ClearanceData::updateOrCreate(
                                 ['booking_id' => $booking->id],
                                 [
-                                    'clearance_type' => $validatedData['clearance_data']['clearance_type'] ?? null,
-                                    'customs_location' => $validatedData['clearance_data']['customs_location'] ?? null,
+                                    'clearance_type'    => $validatedData['clearance_data']['clearance_type'] ?? null,
+                                    'customs_location'  => $validatedData['clearance_data']['customs_location'] ?? null,
                                     'redirect_location' => $validatedData['clearance_data']['redirect_location'] ?? null,
                                 ]
                             );
@@ -533,29 +465,21 @@ class ShipOrderDataController extends Controller
                 }
 
                 // =========================
-                // Update Contact
+                // Update Contact — updateOrCreate preserves ID
                 // =========================
-                $existingContact = ShipContactData::where('ship_order_data_id', $shipOrderData->id)->first();
-                if ($existingContact) {
-                    $existingContact->update([
-                        'contact_loading_name' => $validatedData['contact_loading_name'],
-                        'contact_loading_number' => $validatedData['contact_loading_number'],
-                        'contact_customs_officer_name' => $validatedData['contact_customs_officer_name'],
+                ShipContactData::updateOrCreate(
+                    ['ship_order_data_id' => $shipOrderData->id],
+                    [
+                        'contact_loading_name'           => $validatedData['contact_loading_name'],
+                        'contact_loading_number'         => $validatedData['contact_loading_number'],
+                        'contact_customs_officer_name'   => $validatedData['contact_customs_officer_name'],
                         'contact_customs_officer_number' => $validatedData['contact_customs_officer_number'],
-                    ]);
-                } else {
-                    ShipContactData::create([
-                        'ship_order_data_id' => $shipOrderData->id,
-                        'contact_loading_name' => $validatedData['contact_loading_name'],
-                        'contact_loading_number' => $validatedData['contact_loading_number'],
-                        'contact_customs_officer_name' => $validatedData['contact_customs_officer_name'],
-                        'contact_customs_officer_number' => $validatedData['contact_customs_officer_number'],
-                    ]);
-                }
+                    ]
+                );
 
                 return response()->json([
                     'message' => 'Ship order updated successfully',
-                    'data' => $shipOrderData->load([
+                    'data'    => $shipOrderData->load([
                         'shipLineClients.client',
                         'shipLineClients.shippingLine',
                         'shipLineClients.destination',
@@ -563,14 +487,14 @@ class ShipOrderDataController extends Controller
                         'shipPolicies.shipContainersDetails',
                         'shipBookings.shipContainersDetails',
                         'shipBookings.clearanceData',
-                        'shipContactData'
-                    ])
+                        'shipContactData',
+                    ]),
                 ]);
             });
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to update ship order data',
-                'message' => $e->getMessage()
+                'error'   => 'Failed to update ship order data',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
