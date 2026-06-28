@@ -434,7 +434,7 @@ class ReportsController extends Controller
                 foreach ($shipOrder->policies as $policy) {
                     $covenantAmountSum += ($policy->covenant_amount ?? 0);
                     $assignment = $policy->vehicleDriverAssignments;
-                    if ($assignment) {
+                    if ($assignment && $assignment->driverExtras) {
                         foreach ($assignment->driverExtras as $extra) {
                             $driverExtrasSum += ($extra->extra_amount ?? 0);
                         }
