@@ -210,7 +210,7 @@ class ReportsController extends Controller
                 $driverExtrasSum = 0;
                 foreach ($shipOrder->policies as $policy) {
                     $assignment = $policy->vehicleDriverAssignments;
-                    if ($assignment) {
+                    if ($assignment && $assignment->driverExtras) {
                         foreach ($assignment->driverExtras as $extra) {
                             $driverExtrasSum += ($extra->extra_amount ?? 0);
                         }
@@ -255,7 +255,7 @@ class ReportsController extends Controller
                     'transport_receipts_sum' => $transportReceiptsSum,
                     'driver_extras_total' => $driverExtrasSum,
                     'covenant_amount_total' => $covenantAmountSum,
-                    'transportReceipt' => $shipOrder->transportReceipt->map(function ($transportReceipt) {
+                    'transportReceipt' => ($shipOrder->transportReceipt ?? collect())->map(function ($transportReceipt) {
                         $policy = $transportReceipt->policy;
                         return [
                             'policy_number' => $policy->policy_number,
@@ -338,7 +338,9 @@ class ReportsController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'error' => 'Failed to generate client account statements',
-                'message' => $th->getMessage()
+                'message' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
             ], 500);
         }
     }
