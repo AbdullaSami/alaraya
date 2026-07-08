@@ -44,9 +44,9 @@ class DriverExtraController extends Controller
             ]);
 
             $checkIssue = VehicleDriverAssignment::find($validatedData['vehicle_driver_assignment_id']);
-            if ($checkIssue->driverExtras()->exists() && $checkIssue->policy_id == null) {
+            if ($checkIssue->driverExtras()->exists() || $checkIssue->policy_id == null) {
                 return response()->json(['error' => '
-                تعذر إضافة ملحقات السائق، لأن هذا الإسناد يحتوي على ملحقات مسبقًا أو لا توجد بوليصة مرتبطة به 
+                تعذر إضافة ملحقات السائق، لأن هذا الإسناد يحتوي على ملحقات مسبقًا أو لا توجد بوليصة مرتبطة به
                 '], 422);
             }
             $createdExtras = [];
