@@ -367,14 +367,18 @@ class ShipOrderDataController extends Controller
 
                 // =========================
                 // Update Ship Line Client
+                // FIX: updateOrCreate instead of first()->update() so this can't
+                // fatal-error if the row is somehow missing. ID is preserved
+                // when a matching row already exists.
                 // =========================
-                $shipLineClient = ShipLineClient::where('ship_order_data_id', $shipOrderData->id)->first();
-
-                $shipLineClient->update([
-                    'client_id'       => $validatedData['client_id'],
-                    'shipping_line_id' => $validatedData['shipping_line_id'],
-                    'destination_id'  => $validatedData['destination_id'],
-                ]);
+                $shipLineClient = ShipLineClient::updateOrCreate(
+                    ['ship_order_data_id' => $shipOrderData->id],
+                    [
+                        'client_id'        => $validatedData['client_id'],
+                        'shipping_line_id' => $validatedData['shipping_line_id'],
+                        'destination_id'   => $validatedData['destination_id'],
+                    ]
+                );
 
                 // =========================
                 // Sync Factories — add only, never delete
