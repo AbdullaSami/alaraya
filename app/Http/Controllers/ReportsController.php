@@ -206,13 +206,18 @@ class ReportsController extends Controller
                 }
                 $totalTransportReceiptsSum += $transportReceiptsSum;
 
-                // Calculate driver extras sum for this ship order
+                // =========================
+                // FIX: vehicleDriverAssignments is a hasMany relation (a Collection),
+                // not a single model. Must loop over each assignment.
+                // =========================
                 $driverExtrasSum = 0;
                 foreach ($shipOrder->policies as $policy) {
-                    $assignment = $policy?->vehicleDriverAssignments;
-                    if ($assignment && $assignment->driverExtras) {
-                        foreach ($assignment->driverExtras as $extra) {
-                            $driverExtrasSum += ($extra->extra_amount ?? 0);
+                    $assignments = $policy->vehicleDriverAssignments ?? collect();
+                    foreach ($assignments as $assignment) {
+                        if ($assignment->driverExtras) {
+                            foreach ($assignment->driverExtras as $extra) {
+                                $driverExtrasSum += ($extra->extra_amount ?? 0);
+                            }
                         }
                     }
                 }
@@ -236,13 +241,13 @@ class ReportsController extends Controller
                         return [
                             'booking_number' => $booking->booking_number,
                             'booking_date' => $booking->booking_date,
-                        ] ?? null;
+                        ];
                     }),
                     'orderPolicy' => $shipOrder->shipPolicies->map(function ($policy) {
                         return [
                             'policy_number' => $policy->policy_number,
                             'policy_date' => $policy->policy_date,
-                        ] ?? null;
+                        ];
                     }),
                     'noloans' => $noloans,
                     'shipping_date' => $shipOrder->shipping_date,
@@ -258,8 +263,8 @@ class ReportsController extends Controller
                     'transportReceipt' => ($shipOrder->transportReceipt ?? collect())->map(function ($transportReceipt) {
                         $policy = $transportReceipt->policy;
                         return [
-                            'policy_number' => $policy->policy_number,
-                            'covenant_amount' => $policy->covenant_amount,
+                            'policy_number' => $policy->policy_number ?? null,
+                            'covenant_amount' => $policy->covenant_amount ?? null,
                             'clearance_date' => $policy->clearance_date ?? null,
                             'transport_receipt_details' => [
                                 'army_scales' => $transportReceipt->army_scales,
@@ -293,18 +298,21 @@ class ReportsController extends Controller
                             ]
                         ];
                     }),
-                    'vehicle_driver_assignments' => $shipOrder->policies->map(function ($policy) {
-                        $assignment = $policy->vehicleDriverAssignments;
-                        if ($assignment) {
+                    // =========================
+                    // FIX: flatMap over each policy's assignments (plural relation)
+                    // instead of treating the relation as a single record.
+                    // =========================
+                    'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function ($policy) {
+                        $assignments = $policy->vehicleDriverAssignments ?? collect();
+                        return $assignments->map(function ($assignment) {
                             return [
                                 'id' => $assignment->id,
                                 'vehicle_info' => $assignment->vehicle ?? null,
                                 'driver_info' => $assignment->driver ?? null,
                                 'driver_extras' => $assignment->driverExtras ?? null,
                             ];
-                        }
-                        return null;
-                    })->filter()->unique('id')->values(),
+                        });
+                    })->unique('id')->values(),
                     'clients' => $shipOrder->shipLineClients->map(function ($shipLineClient) {
                         return [
                             'client_name' => $shipLineClient->client->client_name ?? null,
@@ -435,10 +443,18 @@ class ReportsController extends Controller
 
                 foreach ($shipOrder->policies as $policy) {
                     $covenantAmountSum += ($policy->covenant_amount ?? 0);
-                    $assignment = $policy->vehicleDriverAssignments;
-                    if ($assignment && $assignment->driverExtras) {
-                        foreach ($assignment->driverExtras as $extra) {
-                            $driverExtrasSum += ($extra->extra_amount ?? 0);
+
+                    // FIX: vehicleDriverAssignments is a hasMany relation (a Collection),
+                    // so we must loop over each assignment instead of treating it as
+                    // a single record. The old code accessed ->driverExtras directly
+                    // on the Collection, which is always null, so the sum was always 0
+                    // and only ever produced a single (empty) mapped row.
+                    $assignments = $policy->vehicleDriverAssignments ?? collect();
+                    foreach ($assignments as $assignment) {
+                        if ($assignment->driverExtras) {
+                            foreach ($assignment->driverExtras as $extra) {
+                                $driverExtrasSum += ($extra->extra_amount ?? 0);
+                            }
                         }
                     }
                 }
