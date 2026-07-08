@@ -209,7 +209,7 @@ class ReportsController extends Controller
                 // Calculate driver extras sum for this ship order
                 $driverExtrasSum = 0;
                 foreach ($shipOrder->policies as $policy) {
-                    $assignment = $policy->vehicleDriverAssignments;
+                    $assignment = $policy?->vehicleDriverAssignments;
                     if ($assignment && $assignment->driverExtras) {
                         foreach ($assignment->driverExtras as $extra) {
                             $driverExtrasSum += ($extra->extra_amount ?? 0);
