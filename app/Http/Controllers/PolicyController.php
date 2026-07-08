@@ -16,23 +16,23 @@ class PolicyController extends Controller
         $query = Policy::query();
         try {
             if ($user->can('view_any policies') || $user->hasRole('admin')) {
-            $policies = $query->with([
-                // ship order data and its related data
-                'shipOrderData',
-                'shipOrderData.shipLineClients',
-                'shipOrderData.shipPolicies',
-                'shipOrderData.shipPolicies.shipContainersDetails',
-                'shipOrderData.shipBookings',
-                'shipOrderData.shipBookings.clearanceData',
-                'shipOrderData.shipBookings.shipContainersDetails',
-                'shipOrderData.shipContactData',
-                // operating order and its related data
-                'operatingOrder',
-                'vehicleDriverAssignments',
-                'vehicleDriverAssignments.vehicle',
-                'vehicleDriverAssignments.driver',
-                'vehicleDriverAssignments.shipContainers'
-            ])->get();
+                $policies = $query->with([
+                    // ship order data and its related data
+                    'shipOrderData',
+                    'shipOrderData.shipLineClients',
+                    'shipOrderData.shipPolicies',
+                    'shipOrderData.shipPolicies.shipContainersDetails',
+                    'shipOrderData.shipBookings',
+                    'shipOrderData.shipBookings.clearanceData',
+                    'shipOrderData.shipBookings.shipContainersDetails',
+                    'shipOrderData.shipContactData',
+                    // operating order and its related data
+                    'operatingOrder',
+                    'vehicleDriverAssignments',
+                    'vehicleDriverAssignments.vehicle',
+                    'vehicleDriverAssignments.driver',
+                    'vehicleDriverAssignments.shipContainers'
+                ])->get();
             } else {
                 $policies = $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
                     $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
@@ -259,16 +259,38 @@ class PolicyController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         $policy = Policy::findOrFail($id);
+        $treasury = $policy->shipOrderData->treasuries()->first();
+        try {
+            DB::beginTransaction();
+            // Refund covenant amount to treasury if applicable
+            if ($treasury && $policy->covenant_amount > 0) {
+                $treasury->balance += $policy->covenant_amount;
+                $treasury->save();
+                // Optionally, you can also log this refund in the deductions table
+                $treasury->deductions()->create([
+                    'user_id' => $policy->user_id,
+                    'amount' => $policy->covenant_amount,
+                    'reason' => 'Refund for deleted policy #' . $policy->policy_number,
+                    'type' => 'refund',
+                ]);
+            }
+            // Delete related vehicle driver assignments first
+            $policy->vehicleDriverAssignments()->delete();
 
-        // Delete related vehicle driver assignments first
-        $policy->vehicleDriverAssignments()->delete();
+            // Delete the policy
+            $policy->delete();
 
-        // Delete the policy
-        $policy->delete();
-
-        return response()->json([
-            'message' => 'Policy and related vehicle assignments deleted successfully'
-        ]);
+            DB::commit();
+            return response()->json([
+                'message' => 'Policy and related vehicle assignments deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Failed to delete policy',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function getAssignmentByShipOrderAndPolicy($shipOrderId, $policyId)
