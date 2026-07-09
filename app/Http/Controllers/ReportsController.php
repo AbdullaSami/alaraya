@@ -219,7 +219,7 @@ class ReportsController extends Controller
                     foreach ($assignments as $assignment) {
                         if ($assignment->driverExtras) {
                             foreach ($assignment->driverExtras as $extra) {
-                                $driverExtrasSum += ($extra->extra_amount ?? 0);
+                                $driverExtrasSum += ((float) $extra->extra_amount);
                             }
                         }
                     }
