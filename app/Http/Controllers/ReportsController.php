@@ -307,13 +307,13 @@ class ReportsController extends Controller
                     // GUARD: same non-Collection coercion as above.
                     // =========================
                     'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function ($policy) {
-                                            dd('policy relation debug', [
-                        'policy_id' => $policy->id,
-                        'type' => gettype($policy->vehicleDriverAssignments),
-                        'value' => $policy->vehicleDriverAssignments,
-                        'relation_loaded' => $policy->relationLoaded('vehicleDriverAssignments'),
-                        'raw_relations_keys' => array_keys($policy->getRelations()),
-                    ]);
+                        dd('policy relation debug', [
+                            'policy_id' => $policy->id,
+                            'type' => gettype($policy->vehicleDriverAssignments),
+                            'value' => $policy->vehicleDriverAssignments,
+                            'relation_loaded' => $policy->relationLoaded('vehicleDriverAssignments'),
+                            'raw_relations_keys' => array_keys($policy->getRelations()),
+                        ]);
                         $assignments = $this->safeAssignments($policy);
                         return $assignments->map(function ($assignment) {
                             return [
@@ -519,9 +519,16 @@ class ReportsController extends Controller
     {
         $assignments = $policy->vehicleDriverAssignments ?? null;
 
-        return $assignments instanceof \Illuminate\Support\Collection
-            ? $assignments
-            : collect();
+        if ($assignments instanceof \Illuminate\Support\Collection) {
+            return $assignments;
+        }
+
+        if ($assignments instanceof \App\Models\VehicleDriverAssignment) {
+            // Shouldn't happen after hasMany fix, but don't lose real data if it does
+            return collect([$assignments]);
+        }
+
+        return collect();
     }
 
     public function GenerateShareLink(Request $request)
