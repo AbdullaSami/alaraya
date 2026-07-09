@@ -17,7 +17,7 @@ class VehicleDriverAssignment extends Model
 
     public function driverExtras()
     {
-        return $this->hasOne(DriverExtra::class);
+        return $this->hasMany(DriverExtra::class);
     }
     public function vehicle()
     {
