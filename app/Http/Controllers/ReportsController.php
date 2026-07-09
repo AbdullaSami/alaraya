@@ -209,10 +209,13 @@ class ReportsController extends Controller
                 // =========================
                 // FIX: vehicleDriverAssignments is a hasMany relation (a Collection),
                 // not a single model. Must loop over each assignment.
+                // GUARD: some rows can resolve this to a non-Collection (e.g. bool)
+                // if there's an attribute/relation name collision on the Policy
+                // model — coerce to an empty collection instead of crashing.
                 // =========================
                 $driverExtrasSum = 0;
                 foreach ($shipOrder->policies as $policy) {
-                    $assignments = $policy->vehicleDriverAssignments ?? collect();
+                    $assignments = $this->safeAssignments($policy);
                     foreach ($assignments as $assignment) {
                         if ($assignment->driverExtras) {
                             foreach ($assignment->driverExtras as $extra) {
@@ -301,9 +304,10 @@ class ReportsController extends Controller
                     // =========================
                     // FIX: flatMap over each policy's assignments (plural relation)
                     // instead of treating the relation as a single record.
+                    // GUARD: same non-Collection coercion as above.
                     // =========================
                     'vehicle_driver_assignments' => $shipOrder->policies->flatMap(function ($policy) {
-                        $assignments = $policy->vehicleDriverAssignments ?? collect();
+                        $assignments = $this->safeAssignments($policy);
                         return $assignments->map(function ($assignment) {
                             return [
                                 'id' => $assignment->id,
@@ -352,6 +356,7 @@ class ReportsController extends Controller
             ], 500);
         }
     }
+
 
     public function vehicleStatement(Request $request)
     {
@@ -446,10 +451,12 @@ class ReportsController extends Controller
 
                     // FIX: vehicleDriverAssignments is a hasMany relation (a Collection),
                     // so we must loop over each assignment instead of treating it as
-                    // a single record. The old code accessed ->driverExtras directly
-                    // on the Collection, which is always null, so the sum was always 0
-                    // and only ever produced a single (empty) mapped row.
-                    $assignments = $policy->vehicleDriverAssignments ?? collect();
+                    // a single record.
+                    // GUARD: on some rows this relation resolves to a non-Collection
+                    // (e.g. bool) — likely an attribute/relation name collision on the
+                    // Policy model — which previously threw "Attempt to read property
+                    // driverExtras on bool". Coerce to an empty collection instead.
+                    $assignments = $this->safeAssignments($policy);
                     foreach ($assignments as $assignment) {
                         if ($assignment->driverExtras) {
                             foreach ($assignment->driverExtras as $extra) {
@@ -495,6 +502,21 @@ class ReportsController extends Controller
         }
     }
 
+    /**
+     * Safely resolve a policy's vehicleDriverAssignments relation as a Collection.
+     * Guards against cases where this resolves to a non-Collection (e.g. a bool,
+     * which happens if an attribute/relation name collision shadows the relation
+     * on the Policy model) instead of throwing "Attempt to read property on bool".
+     */
+    private function safeAssignments($policy)
+    {
+        $assignments = $policy->vehicleDriverAssignments ?? null;
+
+        return $assignments instanceof \Illuminate\Support\Collection
+            ? $assignments
+            : collect();
+    }
+
     public function GenerateShareLink(Request $request)
     {
         try {
@@ -506,14 +528,14 @@ class ReportsController extends Controller
             $serialNumber = ShareLink::generateSerialNumber();
             $link = ShareLink::create([
                 'serial_number' => $serialNumber,
-                'user_id'       => auth()->id(),
-                'type'          => $request->type,
-                'body'          => json_encode($request->body),
+                'user_id' => auth()->id(),
+                'type' => $request->type,
+                'body' => json_encode($request->body),
             ]);
 
             return response()->json([
                 'serial' => $link->serial_number,
-                'url'    => "https://port-operations-management-system.vercel.app/reports/share-links/" . $link->serial_number,
+                'url' => "https://port-operations-management-system.vercel.app/reports/share-links/" . $link->serial_number,
             ]);
         } catch (\Throwable $th) {
             return response()->json([
