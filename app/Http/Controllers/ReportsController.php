@@ -361,39 +361,42 @@ class ReportsController extends Controller
     public function vehicleStatement(Request $request)
     {
         try {
-            // Parse is_cleared once, as a real boolean (or null if not provided).
-            // Using filter_var avoids the PHP loose-comparison bug where the string
-            // "false" evaluates as truthy against `== true`.
+            // Parse each filter independently — none of them should depend on another being present.
             $isCleared = $request->has('is_cleared')
                 ? filter_var($request->input('is_cleared'), FILTER_VALIDATE_BOOLEAN)
                 : null;
 
+            $fromDate = $request->filled('from_date') ? $request->input('from_date') : null;
+            $toDate = $request->filled('to_date') ? $request->input('to_date') : null;
+            $vehicleNumber = $request->filled('vehicle_number') ? $request->input('vehicle_number') : null;
+
+            // Pick which date column to range on: if the caller told us cleared/not-cleared,
+            // use the column that makes sense for that state. Otherwise default to created_at.
+            $dateColumn = $isCleared === true ? 'clearance_date' : 'created_at';
+
+            $applyFilters = function ($query) use ($isCleared, $fromDate, $toDate, $vehicleNumber, $dateColumn) {
+                if (!is_null($isCleared)) {
+                    if ($isCleared === true) {
+                        $query->whereNotNull('clearance_date');
+                    } else {
+                        $query->whereNull('clearance_date');
+                    }
+                }
+
+                if ($fromDate && $toDate) {
+                    $query->whereBetween($dateColumn, [$fromDate, $toDate]);
+                }
+
+                if ($vehicleNumber) {
+                    $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($vehicleNumber) {
+                        $q->where('vehicle_number', 'like', "%{$vehicleNumber}%");
+                    });
+                }
+            };
+
             $query = ShipOrderData::with([
-                'policies' => function ($query) use ($request, $isCleared) {
-
-                    if (!is_null($isCleared) && $isCleared === true) {
-                        if ($request->filled('from_date') && $request->filled('to_date')) {
-                            $query->whereNotNull('clearance_date')
-                                ->whereBetween('clearance_date', [
-                                    $request->from_date,
-                                    $request->to_date
-                                ]);
-                        }
-                    } elseif (!is_null($isCleared) && $isCleared === false) {
-                        if ($request->filled('from_date') && $request->filled('to_date')) {
-                            $query->whereNull('clearance_date')
-                                ->whereBetween('created_at', [
-                                    $request->from_date,
-                                    $request->to_date
-                                ]);
-                        }
-                    }
-
-                    if ($request->filled('vehicle_number')) {
-                        $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
-                            $q->where('vehicle_number', 'like', "%{$request->vehicle_number}%");
-                        });
-                    }
+                'policies' => function ($query) use ($applyFilters) {
+                    $applyFilters($query);
 
                     $query->with([
                         'user',
@@ -410,36 +413,10 @@ class ReportsController extends Controller
                 'shipLineClients.shipLineClientFactories.factory',
             ]);
 
-            // Mirror the same conditions on the parent query so ShipOrders whose
-            // policies don't match the filter are excluded entirely, not just
-            // returned with an empty policies collection.
-            if ($request->has('is_cleared') || $request->filled('vehicle_number') || $request->filled('from_date')) {
-                $query->whereHas('policies', function ($query) use ($request, $isCleared) {
-
-                    if (!is_null($isCleared) && $isCleared === true) {
-                        if ($request->filled('from_date') && $request->filled('to_date')) {
-                            $query->whereNotNull('clearance_date')
-                                ->whereBetween('clearance_date', [
-                                    $request->from_date,
-                                    $request->to_date
-                                ]);
-                        }
-                    } elseif (!is_null($isCleared) && $isCleared === false) {
-                        if ($request->filled('from_date') && $request->filled('to_date')) {
-                            $query->whereNull('clearance_date')
-                                ->whereBetween('created_at', [
-                                    $request->from_date,
-                                    $request->to_date
-                                ]);
-                        }
-                    }
-
-                    if ($request->filled('vehicle_number')) {
-                        $query->whereHas('vehicleDriverAssignments.vehicle', function ($q) use ($request) {
-                            $q->where('vehicle_number', 'like', "%{$request->vehicle_number}%");
-                        });
-                    }
-                });
+            // Mirror the same filters on the parent query so ShipOrders with no matching
+            // policies are excluded entirely, not returned with an empty policies array.
+            if (!is_null($isCleared) || ($fromDate && $toDate) || $vehicleNumber) {
+                $query->whereHas('policies', $applyFilters);
             }
 
             $vehicles = $query->get();
@@ -456,10 +433,6 @@ class ReportsController extends Controller
                 foreach ($shipOrder->policies as $policy) {
                     $covenantAmountSum += ($policy->covenant_amount ?? 0);
 
-                    // vehicleDriverAssignments is a hasMany relation (a Collection),
-                    // so we loop over each assignment instead of treating it as a
-                    // single record. safeAssignments() guards against the relation
-                    // resolving to a non-Collection on some rows.
                     $assignments = $this->safeAssignments($policy);
                     foreach ($assignments as $assignment) {
                         if ($assignment->driverExtras) {
