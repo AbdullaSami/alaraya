@@ -360,7 +360,6 @@ class ReportsController extends Controller
 
     public function vehicleStatement(Request $request)
     {
-        dd($request->from_date, $request->to_date, $request->vehicle_number, $request->is_cleared);
         try {
             // Parse is_cleared once, as a real boolean (or null if not provided).
             // Using filter_var avoids the PHP loose-comparison bug where the string
