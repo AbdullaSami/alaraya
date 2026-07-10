@@ -360,10 +360,14 @@ class ReportsController extends Controller
 
     public function vehicleStatement(Request $request)
     {
-        $isCleared = $request->has('is_cleared')
-            ? filter_var($request->input('is_cleared'), FILTER_VALIDATE_BOOLEAN)
-            : null;
         try {
+            // Parse is_cleared once, as a real boolean (or null if not provided).
+            // Using filter_var avoids the PHP loose-comparison bug where the string
+            // "false" evaluates as truthy against `== true`.
+            $isCleared = $request->has('is_cleared')
+                ? filter_var($request->input('is_cleared'), FILTER_VALIDATE_BOOLEAN)
+                : null;
+
             $query = ShipOrderData::with([
                 'policies' => function ($query) use ($request, $isCleared) {
 
@@ -404,11 +408,11 @@ class ReportsController extends Controller
                 'shipLineClients.shippingLine',
                 'shipLineClients.destination',
                 'shipLineClients.shipLineClientFactories.factory',
-
             ]);
 
-            // ✅ Mirror the same conditions on the parent query to exclude ShipOrders
-            // that have no matching policies after filtering
+            // Mirror the same conditions on the parent query so ShipOrders whose
+            // policies don't match the filter are excluded entirely, not just
+            // returned with an empty policies collection.
             if ($request->has('is_cleared') || $request->filled('vehicle_number') || $request->filled('from_date')) {
                 $query->whereHas('policies', function ($query) use ($request, $isCleared) {
 
@@ -452,13 +456,10 @@ class ReportsController extends Controller
                 foreach ($shipOrder->policies as $policy) {
                     $covenantAmountSum += ($policy->covenant_amount ?? 0);
 
-                    // FIX: vehicleDriverAssignments is a hasMany relation (a Collection),
-                    // so we must loop over each assignment instead of treating it as
-                    // a single record.
-                    // GUARD: on some rows this relation resolves to a non-Collection
-                    // (e.g. bool) — likely an attribute/relation name collision on the
-                    // Policy model — which previously threw "Attempt to read property
-                    // driverExtras on bool". Coerce to an empty collection instead.
+                    // vehicleDriverAssignments is a hasMany relation (a Collection),
+                    // so we loop over each assignment instead of treating it as a
+                    // single record. safeAssignments() guards against the relation
+                    // resolving to a non-Collection on some rows.
                     $assignments = $this->safeAssignments($policy);
                     foreach ($assignments as $assignment) {
                         if ($assignment->driverExtras) {
