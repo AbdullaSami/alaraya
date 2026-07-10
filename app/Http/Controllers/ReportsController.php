@@ -360,11 +360,14 @@ class ReportsController extends Controller
 
     public function vehicleStatement(Request $request)
     {
+        $isCleared = $request->has('is_cleared')
+            ? filter_var($request->input('is_cleared'), FILTER_VALIDATE_BOOLEAN)
+            : null;
         try {
             $query = ShipOrderData::with([
-                'policies' => function ($query) use ($request) {
+                'policies' => function ($query) use ($request, $isCleared) {
 
-                    if ($request->has('is_cleared') && $request->input('is_cleared') == true) {
+                    if (!is_null($isCleared) && $isCleared === true) {
                         if ($request->filled('from_date') && $request->filled('to_date')) {
                             $query->whereNotNull('clearance_date')
                                 ->whereBetween('clearance_date', [
@@ -372,7 +375,7 @@ class ReportsController extends Controller
                                     $request->to_date
                                 ]);
                         }
-                    } elseif ($request->has('is_cleared') && $request->input('is_cleared') == false) {
+                    } elseif (!is_null($isCleared) && $isCleared === false) {
                         if ($request->filled('from_date') && $request->filled('to_date')) {
                             $query->whereNull('clearance_date')
                                 ->whereBetween('created_at', [
@@ -407,9 +410,9 @@ class ReportsController extends Controller
             // ✅ Mirror the same conditions on the parent query to exclude ShipOrders
             // that have no matching policies after filtering
             if ($request->has('is_cleared') || $request->filled('vehicle_number') || $request->filled('from_date')) {
-                $query->whereHas('policies', function ($query) use ($request) {
+                $query->whereHas('policies', function ($query) use ($request, $isCleared) {
 
-                    if ($request->has('is_cleared') && $request->input('is_cleared') == true) {
+                    if (!is_null($isCleared) && $isCleared === true) {
                         if ($request->filled('from_date') && $request->filled('to_date')) {
                             $query->whereNotNull('clearance_date')
                                 ->whereBetween('clearance_date', [
@@ -417,7 +420,7 @@ class ReportsController extends Controller
                                     $request->to_date
                                 ]);
                         }
-                    } elseif ($request->has('is_cleared') && $request->input('is_cleared') == false) {
+                    } elseif (!is_null($isCleared) && $isCleared === false) {
                         if ($request->filled('from_date') && $request->filled('to_date')) {
                             $query->whereNull('clearance_date')
                                 ->whereBetween('created_at', [
