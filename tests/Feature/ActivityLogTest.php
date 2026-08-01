@@ -613,4 +613,72 @@ class ActivityLogTest extends TestCase
 
         $this->assertGreaterThan(0, $logs->count(), 'Expected at least one activity_log row.');
     }
+
+    // =========================================================================
+    // TEST 12 — API: GET /api/activity-logs (Paginated & Filtered)
+    // =========================================================================
+
+    /** @test */
+    public function it_fetches_activity_logs_via_api(): void
+    {
+        $this->actingAs($this->causer());
+
+        $client = Client::create([
+            'client_name'    => 'API Test Client',
+            'contact_number' => '0507777777',
+        ]);
+        $this->track(Client::class, $client->id);
+        $this->snapshotLogs();
+
+        $response = $this->getJson('/api/activity-logs?log_name=clients&event=created');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'current_page',
+                'data' => [
+                    '*' => [
+                        'id',
+                        'log_name',
+                        'description',
+                        'subject_type',
+                        'event',
+                        'subject_id',
+                        'causer_id',
+                        'properties',
+                        'created_at',
+                        'causer' => ['id', 'full_name', 'user_name', 'email']
+                    ]
+                ],
+                'total'
+            ]);
+
+        echo PHP_EOL . '  ✅ API GET /api/activity-logs returned valid paginated JSON.' . PHP_EOL;
+    }
+
+    // =========================================================================
+    // TEST 13 — API: GET /api/activity-logs/log-names & /stats
+    // =========================================================================
+
+    /** @test */
+    public function it_fetches_log_names_and_stats_via_api(): void
+    {
+        $this->actingAs($this->causer());
+
+        // Log-names endpoint
+        $namesResponse = $this->getJson('/api/activity-logs/log-names');
+        $namesResponse->assertStatus(200)->assertJsonStructure(['log_names']);
+
+        // Stats endpoint
+        $statsResponse = $this->getJson('/api/activity-logs/stats');
+        $statsResponse->assertStatus(200)
+            ->assertJsonStructure([
+                'total_activities',
+                'events_breakdown',
+                'categories_breakdown',
+                'recent_activities'
+            ]);
+
+        echo PHP_EOL . '  ✅ API GET /api/activity-logs/log-names & /stats returned 200 OK.' . PHP_EOL;
+    }
 }
+

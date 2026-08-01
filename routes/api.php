@@ -18,6 +18,7 @@ use App\Http\Controllers\TransportReceiptController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\TreasuryOperationsController;
 use App\Http\Controllers\DriverExtraController;
+use App\Http\Controllers\ActivityLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -106,6 +107,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Container management for vehicle assignments
     Route::post('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'addContainersToAssignment']);
     Route::delete('/vehicle-assignments/{assignmentId}/containers', [PolicyController::class, 'removeContainersFromAssignment']);
+
+    // Activity Log API for frontend
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+    Route::get('/activity-logs/log-names', [ActivityLogController::class, 'logNames']);
+    Route::get('/activity-logs/stats', [ActivityLogController::class, 'stats']);
+    Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);
 
     // Reports
     Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleReport']);

@@ -13,7 +13,15 @@ class FactorySeeder extends Seeder
      */
     public function run(): void
     {
-        $clients = Client::all();
+        $clientIds = Client::pluck('id')->values()->toArray();
+        if (empty($clientIds)) {
+            return;
+        }
+
+        // Helper to safely get client ID by 1-based index
+        $getClientId = function($index) use ($clientIds) {
+            return $clientIds[($index - 1) % count($clientIds)];
+        };
         
         $factories = [
             // Factories for Client 1 (Al-Rajhi Industrial Group)
@@ -194,6 +202,7 @@ class FactorySeeder extends Seeder
         ];
 
         foreach ($factories as $factory) {
+            $factory['client_id'] = $getClientId($factory['client_id']);
             Factory::create($factory);
         }
     }
