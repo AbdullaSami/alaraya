@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TreasuryDeduction extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -16,6 +19,20 @@ class TreasuryDeduction extends Model
         'reason',
         'type',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('treasury_deductions');
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $activity->description = class_basename($this) . " {$eventName}";
+    }
 
     public function treasury()
     {

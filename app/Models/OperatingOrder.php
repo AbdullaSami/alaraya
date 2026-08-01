@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class OperatingOrder extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'ship_order_data_id',
@@ -25,6 +28,20 @@ class OperatingOrder extends Model
         'release_and_assignment_image',
         'release_and_assignment_requirements',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('operating_orders');
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $activity->description = class_basename($this) . " {$eventName}";
+    }
 
     public function torrentContainers()
     {

@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Policy extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -21,6 +24,20 @@ class Policy extends Model
         'settled',
         'clearance_date',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('policies');
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $activity->description = class_basename($this) . " {$eventName}";
+    }
 
     protected $casts = [
         'policy_type' => 'boolean',

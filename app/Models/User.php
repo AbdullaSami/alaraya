@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable ,HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, LogsActivity;
 
 
     /**
@@ -27,6 +30,20 @@ class User extends Authenticatable
         'password',
         'phone_number',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['full_name', 'user_name', 'email', 'phone_number'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('users');
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $activity->description = class_basename($this) . " {$eventName}";
+    }
 
     public function treasuries(){
         return $this->belongsToMany(Treasury::class, 'treasury_user');
