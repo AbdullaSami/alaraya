@@ -76,13 +76,13 @@ class ActivityLogController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
-                      ->orWhere('log_name', 'like', "%{$search}%")
-                      ->orWhere('properties', 'like', "%{$search}%");
+                        ->orWhere('log_name', 'like', "%{$search}%")
+                        ->orWhere('properties', 'like', "%{$search}%");
                 });
             }
 
             // Sorting
-            $sortBy  = $request->input('sort_by', 'id');
+            $sortBy = $request->input('sort_by', 'id');
             $sortDir = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
             $allowedSorts = ['id', 'log_name', 'event', 'created_at', 'causer_id'];
@@ -99,7 +99,7 @@ class ActivityLogController extends Controller
             return response()->json($logs, 200);
         } catch (\Exception $e) {
             return response()->json([
-                'error'   => 'Failed to retrieve activity logs',
+                'error' => 'Failed to retrieve activity logs',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -150,7 +150,7 @@ class ActivityLogController extends Controller
     {
         try {
             $totalActivities = Activity::count();
-            
+
             $eventsCount = Activity::select('event', DB::raw('count(*) as count'))
                 ->groupBy('event')
                 ->pluck('count', 'event');
@@ -164,18 +164,24 @@ class ActivityLogController extends Controller
                     $q->select('id', 'full_name', 'user_name', 'email');
                 }
             ])
-            ->latest('id')
-            ->limit(5)
-            ->get();
+                ->latest('id')
+                ->limit(5)
+                ->get();
 
             return response()->json([
-                'total_activities'     => $totalActivities,
-                'events_breakdown'     => $eventsCount,
+                'total_activities' => $totalActivities,
+                'events_breakdown' => $eventsCount,
                 'categories_breakdown' => $logNamesCount,
-                'recent_activities'    => $recentActivities
+                'recent_activities' => $recentActivities
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve activity stats'], 500);
         }
+    }
+
+    public function getLogs()
+    {
+        $logs = Activity::latest()->with('causer')->get();
+        return response()->json($logs);
     }
 }
