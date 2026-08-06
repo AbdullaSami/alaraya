@@ -31,7 +31,8 @@ class PolicyController extends Controller
                     'vehicleDriverAssignments',
                     'vehicleDriverAssignments.vehicle',
                     'vehicleDriverAssignments.driver',
-                    'vehicleDriverAssignments.shipContainers'
+                    'vehicleDriverAssignments.shipContainers',
+                    'user'
                 ])->get();
             } else {
                 $policies = $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
@@ -50,7 +51,8 @@ class PolicyController extends Controller
                     'vehicleDriverAssignments',
                     'vehicleDriverAssignments.vehicle',
                     'vehicleDriverAssignments.driver',
-                    'vehicleDriverAssignments.shipContainers'
+                    'vehicleDriverAssignments.shipContainers',
+                    'user'
                 ])->get();
             }
             return response()->json($policies);
@@ -152,7 +154,7 @@ class PolicyController extends Controller
 
             return response()->json([
                 'message' => 'Policy created successfully with vehicle assignments and containers',
-                'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
+                'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers', 'user'])
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -183,7 +185,8 @@ class PolicyController extends Controller
             'vehicleDriverAssignments',
             'vehicleDriverAssignments.vehicle',
             'vehicleDriverAssignments.driver',
-            'vehicleDriverAssignments.shipContainers'
+            'vehicleDriverAssignments.shipContainers',
+            'user'
         ])->findOrFail($id);
 
         return response()->json($policy);
@@ -248,7 +251,7 @@ class PolicyController extends Controller
 
         return response()->json([
             'message' => 'Policy updated successfully',
-            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers'])
+            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers', 'user'])
         ]);
     }
 
@@ -324,7 +327,8 @@ class PolicyController extends Controller
                 'operatingOrder',
                 'vehicleDriverAssignments.vehicle',
                 'vehicleDriverAssignments.driver',
-                'vehicleDriverAssignments.shipContainers'
+                'vehicleDriverAssignments.shipContainers',
+                'user'
             ]);
         }])->findOrFail($shipOrderDataId);
 
