@@ -113,7 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/activity-logs/log-names', [ActivityLogController::class, 'logNames']);
     Route::get('/activity-logs/stats', [ActivityLogController::class, 'stats']);
     Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);
-    Route::get('/activity-logs/getLogs}', [ActivityLogController::class, 'getLogs']);
+    Route::get('/activity-logs/getLogs', [ActivityLogController::class, 'getLogs']);
 
     // Reports
     Route::get('/reports/vehicle/{number}', [ReportsController::class, 'vehicleReport']);
