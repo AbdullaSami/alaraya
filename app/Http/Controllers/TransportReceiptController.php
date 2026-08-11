@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+
 class TransportReceiptController extends Controller
 {
     /**
@@ -196,6 +197,8 @@ class TransportReceiptController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $transportReceipt = TransportReceipt::findOrFail($id);
 
             $validated = $request->validate([
@@ -230,7 +233,90 @@ class TransportReceiptController extends Controller
                 'port_receipts' => 'nullable|numeric|min:0',
             ]);
 
+            $expenseFields = [
+                'army_scales',
+                'roads_and_bridges',
+                'road_cards',
+                'governorate_voucher',
+                'tips',
+                'official_receipts',
+                'overnight_leave',
+                'tarif_receipts',
+                'third_party_car_rental',
+                'customs_clearance',
+                'bill_of_lading_amendment',
+                'third_party_vehicle_leave',
+                'brokers',
+                'vgm',
+                'x_ray',
+                'data_entry',
+                'yard_receipts',
+                'port_authority_receipts',
+                'port_weight_fees',
+                'agency_receipts',
+                'explosives_receipt',
+                'bascule_scale_receipt',
+                'cashier_receipt',
+                'reweighing_receipt',
+                'sina_marine_receipts',
+                'tunnel_ferry_receipts',
+                'container_repair_receipt',
+                'port_receipts',
+            ];
+
+            $oldTotal = collect($transportReceipt->only($expenseFields))->sum();
+
+            $newTotal = collect($validated)->only($expenseFields)->sum();
+
+            $shipOrder = $transportReceipt->shipOrder;
+            $treasury = $shipOrder->treasuries()->first();
+
+            if (!$treasury) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لم يتم تعيين خزينة لطلب الشحن'
+                ], 400);
+            }
+
+            $difference = $newTotal - $oldTotal;
+
+            if ($difference > 0 && $treasury->balance < $difference) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الرصيد غير كافٍ في الخزينة'
+                ], 400);
+            }
+
+            $treasury->balance -= $difference;
+            $treasury->save();
+
+            $deduction = $treasury->deductions()
+                ->where('type', 'transport_receipt')
+                ->where('reason', 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number)
+                ->latest()
+                ->first();
+
+            if ($deduction) {
+                $deduction->update([
+                    'amount' => $newTotal,
+                    'user_id' => auth()->user()->id,
+                ]);
+            } else {
+                $treasury->deductions()->create([
+                    'user_id' => auth()->user()->id,
+                    'amount' => $newTotal,
+                    'reason' => 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
+                    'type' => 'transport_receipt',
+                ]);
+            }
+
             $transportReceipt->update($validated);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -238,17 +324,23 @@ class TransportReceiptController extends Controller
                 'data' => $transportReceipt->load('shipOrder')
             ]);
         } catch (ValidationException $e) {
+            DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Transport receipt not found'
             ], 404);
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update transport receipt',
