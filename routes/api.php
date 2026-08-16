@@ -69,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/treasury/deposit', [TreasuryOperationsController::class, 'deposit']);
     Route::post('/treasury/send', [TreasuryOperationsController::class, 'send']);
     Route::post('/treasury/deduction', [TreasuryOperationsController::class, 'deduction']);
+    Route::post('/treasury/update/deduction/{id}', [TreasuryOperationsController::class, 'updateDeduction']);
+    Route::post('/treasury/delete/deduction/{id}', [TreasuryOperationsController::class, 'destroyDeduction']);
     Route::post('/treasury/shift-handle', [TreasuryOperationsController::class, 'shiftHandle']);
     // Handle Transport Receipt
     Route::apiResource('/transport-receipts', TransportReceiptController::class);

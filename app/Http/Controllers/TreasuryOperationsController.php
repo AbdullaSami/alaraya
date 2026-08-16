@@ -160,6 +160,83 @@ class TreasuryOperationsController extends Controller
         }
     }
 
+    public function updateDeduction(Request $request, $id)
+{
+    // validate data
+    $validatedData = $request->validate([
+        'treasury_id' => 'required|exists:treasuries,id',
+        'amount' => 'required|numeric|min:0.01',
+        'reason' => 'nullable|string',
+        'type' => 'required|string|max:255',
+    ]);
+
+    try {
+        $deduction = TreasuryDeduction::findOrFail($id);
+
+        DB::beginTransaction();
+
+        // Lock rows to avoid race conditions on balance updates
+        $oldTreasury = Treasury::lockForUpdate()->findOrFail($deduction->treasury_id);
+        $newTreasury = $validatedData['treasury_id'] == $deduction->treasury_id
+            ? $oldTreasury
+            : Treasury::lockForUpdate()->findOrFail($validatedData['treasury_id']);
+
+        // Step 1: reverse the old deduction from its original treasury
+        $oldTreasury->balance += $deduction->amount;
+
+        // Step 2: check the (possibly new) target treasury has enough balance
+        // for the new amount, after the reversal above if it's the same treasury
+        if ($newTreasury->balance < $validatedData['amount']) {
+            DB::rollBack();
+            return response()->json(['error' => 'Insufficient balance in the treasury'], 400);
+        }
+
+        // Step 3: apply the new deduction amount to the target treasury
+        $newTreasury->balance -= $validatedData['amount'];
+
+        $oldTreasury->save();
+        if ($newTreasury->isNot($oldTreasury)) {
+            $newTreasury->save();
+        }
+
+        // Step 4: update the deduction record itself
+        $deduction->treasury_id = $validatedData['treasury_id'];
+        $deduction->amount = $validatedData['amount'];
+        $deduction->reason = $validatedData['reason'] ?? $deduction->reason;
+        $deduction->type = $validatedData['type'];
+        $deduction->save();
+
+        DB::commit();
+        return response()->json(['message' => 'Deduction updated successfully', 'deduction' => $deduction], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function destroyDeduction($id)
+{
+    try {
+        $deduction = TreasuryDeduction::findOrFail($id);
+
+        DB::beginTransaction();
+
+        // Lock the treasury row to avoid race conditions
+        $treasury = Treasury::lockForUpdate()->findOrFail($deduction->treasury_id);
+
+        // Restore the balance that was deducted
+        $treasury->balance += $deduction->amount;
+        $treasury->save();
+
+        $deduction->delete();
+
+        DB::commit();
+        return response()->json(['message' => 'Deduction deleted successfully'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
     /**
      * Assign shift to treasury.
      */
