@@ -264,12 +264,22 @@ class TransportReceiptController extends Controller
                 'port_receipts',
             ];
 
+            // Old total from the record as it currently stands
             $oldTotal = collect($transportReceipt->only($expenseFields))->sum();
 
-            $newTotal = collect($validated)->only($expenseFields)->sum();
+            // IMPORTANT: merge validated data over the existing record so fields
+            // that weren't sent in this request (nullable/sometimes) still count
+            // toward the new total instead of silently dropping to 0.
+            $mergedFields = array_merge(
+                $transportReceipt->only($expenseFields),
+                collect($validated)->only($expenseFields)->toArray()
+            );
+            $newTotal = collect($mergedFields)->sum();
 
             $shipOrder = $transportReceipt->shipOrder;
-            $treasury = $shipOrder->treasuries()->first();
+
+            // Lock the treasury row to avoid race conditions with concurrent deductions
+            $treasury = $shipOrder->treasuries()->lockForUpdate()->first();
 
             if (!$treasury) {
                 DB::rollBack();
@@ -282,6 +292,7 @@ class TransportReceiptController extends Controller
 
             $difference = $newTotal - $oldTotal;
 
+            // Only need to check balance sufficiency when the edit INCREASES the amount
             if ($difference > 0 && $treasury->balance < $difference) {
                 DB::rollBack();
 
@@ -291,8 +302,13 @@ class TransportReceiptController extends Controller
                 ], 400);
             }
 
-            $treasury->balance -= $difference;
-            $treasury->save();
+            // difference > 0 (increase) -> balance goes down
+            // difference < 0 (decrease) -> balance goes up (refund)
+            // difference == 0 -> no change
+            if ($difference !== 0) {
+                $treasury->balance -= $difference;
+                $treasury->save();
+            }
 
             $deduction = $treasury->deductions()
                 ->where('type', 'transport_receipt')
@@ -304,12 +320,13 @@ class TransportReceiptController extends Controller
                 $deduction->update([
                     'amount' => $newTotal,
                     'user_id' => auth()->user()->id,
+                    'reason' => ' تعديل مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
                 ]);
             } else {
                 $treasury->deductions()->create([
                     'user_id' => auth()->user()->id,
                     'amount' => $newTotal,
-                    'reason' => 'مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
+                    'reason' => ' تعديل مصاريف إيصال النقل لطلب الشحن رقم #' . $shipOrder->order_number,
                     'type' => 'transport_receipt',
                 ]);
             }

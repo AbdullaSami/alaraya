@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Policy;
 use App\Models\ShipOrderData;
 use App\Models\VehicleDriverAssignment;
+use App\Models\TreasuryDeduction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PolicyController extends Controller
 {
@@ -200,59 +202,180 @@ class PolicyController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $policy = Policy::findOrFail($id);
+        try {
+            DB::beginTransaction();
 
-        $validated = $request->validate([
-            'ship_order_data_id' => 'sometimes|required|exists:ship_order_data,id',
-            'operating_order_id' => 'sometimes|required|exists:operating_orders,id',
-            'covenant_amount' => 'nullable|numeric|min:0',
-            'policy_type' => 'sometimes|boolean',
-            'policy_aging_date' => 'required_if:policy_type,true|nullable|string',
-            'policy_loading_date' => 'required_if:policy_type,true|nullable|string|after_or_equal:policy_aging_date',
-            'vehicle_driver_assignments' => 'sometimes|array|min:1',
-            'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
-            'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
-            'vehicle_driver_assignments.*.ship_container_ids' => 'required|array|min:1',
-            'vehicle_driver_assignments.*.ship_container_ids.*' => 'required|exists:ship_containers_details,id',
-        ]);
+            $policy = Policy::lockForUpdate()->findOrFail($id);
 
-        // Update policy data
-        $policyData = $request->only([
-            'ship_order_data_id',
-            'operating_order_id',
-            'covenant_amount',
-            'policy_type',
-            'policy_aging_date',
-            'policy_loading_date'
-        ]);
+            $validated = $request->validate([
+                'ship_order_data_id' => 'sometimes|required|exists:ship_order_data,id',
+                'operating_order_id' => 'sometimes|required|exists:operating_orders,id',
+                'covenant_amount' => 'nullable|numeric|min:0',
+                'policy_type' => 'sometimes|boolean',
+                'policy_aging_date' => 'required_if:policy_type,true|nullable|string',
+                'policy_loading_date' => 'required_if:policy_type,true|nullable|string|after_or_equal:policy_aging_date',
+                'vehicle_driver_assignments' => 'sometimes|array|min:1',
+                'vehicle_driver_assignments.*.vehicle_id' => 'required|exists:vehicles,id',
+                'vehicle_driver_assignments.*.driver_id' => 'required|exists:drivers,id',
+                'vehicle_driver_assignments.*.ship_container_ids' => 'required|array|min:1',
+                'vehicle_driver_assignments.*.ship_container_ids.*' => 'required|exists:ship_containers_details,id',
+            ]);
 
-        $policy->update($policyData);
+            $oldShipOrderDataId = $policy->ship_order_data_id;
+            $oldCovenantAmount = $policy->covenant_amount ?? 0;
 
-        // Update vehicle driver assignments if provided
-        if (isset($validated['vehicle_driver_assignments'])) {
-            // Delete existing assignments (this will also delete pivot records due to cascade)
-            $policy->vehicleDriverAssignments()->delete();
+            $newShipOrderDataId = $validated['ship_order_data_id'] ?? $oldShipOrderDataId;
+            // covenant_amount is nullable, so only treat it as "changed" if the key was actually sent
+            $newCovenantAmount = array_key_exists('covenant_amount', $validated)
+                ? ($validated['covenant_amount'] ?? 0)
+                : $oldCovenantAmount;
 
-            // Create new assignments with multiple containers
-            $assignments = [];
-            foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
-                $assignment = VehicleDriverAssignment::create([
-                    'vehicle_id' => $assignmentData['vehicle_id'],
-                    'driver_id' => $assignmentData['driver_id'],
-                    'policy_id' => $policy->id,
-                ]);
+            $shipOrderChanged = $oldShipOrderDataId !== $newShipOrderDataId;
 
-                // Attach multiple ship containers to the assignment
-                $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+            // Existing deduction row tied to this policy (if any)
+            $existingDeduction = $oldCovenantAmount > 0
+                ? TreasuryDeduction::where('type', 'transport_receipt')
+                ->where('reason', 'مصاريف العهدة لوثيقة رقم #' . $policy->policy_number)
+                ->latest()
+                ->first()
+                : null;
 
-                $assignments[] = $assignment->load(['vehicle', 'driver', 'shipContainers']);
+            if ($shipOrderChanged) {
+                // --- Ship order (and therefore treasury) changed ---
+
+                // 1. Refund the OLD treasury the full old covenant amount, and drop the old deduction
+                if ($oldCovenantAmount > 0) {
+                    $oldShipOrderData = ShipOrderData::find($oldShipOrderDataId);
+                    $oldTreasury = $oldShipOrderData?->treasuries()->lockForUpdate()->first();
+
+                    if ($oldTreasury) {
+                        $oldTreasury->balance += $oldCovenantAmount;
+                        $oldTreasury->save();
+                    }
+
+                    $existingDeduction?->delete();
+                }
+
+                // 2. Deduct the NEW covenant amount from the NEW treasury
+                if ($newCovenantAmount > 0) {
+                    $newShipOrderData = ShipOrderData::findOrFail($newShipOrderDataId);
+                    $newTreasury = $newShipOrderData->treasuries()->lockForUpdate()->first();
+
+                    if ($newTreasury) {
+                        if ($newTreasury->balance < $newCovenantAmount) {
+                            DB::rollBack();
+
+                            return response()->json([
+                                'message' => 'الرصيد غير كافٍ في الخزينة'
+                            ], 400);
+                        }
+
+                        $newTreasury->balance -= $newCovenantAmount;
+                        $newTreasury->save();
+
+                        $newTreasury->deductions()->create([
+                            'user_id' => auth()->id(),
+                            'amount' => $newCovenantAmount,
+                            'reason' => 'مصاريف العهدة لوثيقة رقم #' . $policy->policy_number,
+                            'type' => 'transport_receipt',
+                        ]);
+                    }
+                }
+            } else {
+                // --- Same ship order / treasury, only the amount may have changed ---
+                $difference = $newCovenantAmount - $oldCovenantAmount;
+
+                if ($difference !== 0) {
+                    $shipOrderData = ShipOrderData::find($oldShipOrderDataId);
+                    $treasury = $shipOrderData?->treasuries()->lockForUpdate()->first();
+
+                    if ($treasury) {
+                        if ($difference > 0 && $treasury->balance < $difference) {
+                            DB::rollBack();
+
+                            return response()->json([
+                                'message' => 'الرصيد غير كافٍ في الخزينة'
+                            ], 400);
+                        }
+
+                        $treasury->balance -= $difference; // handles both increase and decrease/refund
+                        $treasury->save();
+
+                        if ($newCovenantAmount <= 0) {
+                            // Amount cleared entirely -> drop the deduction record
+                            $existingDeduction?->delete();
+                        } elseif ($existingDeduction) {
+                            $existingDeduction->update([
+                                'amount' => $newCovenantAmount,
+                                'user_id' => auth()->id(),
+                                'reason' => 'تعديل مصاريف العهدة لوثيقة رقم #' . $policy->policy_number,
+
+                            ]);
+                        } else {
+                            $treasury->deductions()->create([
+                                'user_id' => auth()->id(),
+                                'amount' => $newCovenantAmount,
+                                'reason' => 'مصاريف العهدة لوثيقة رقم #' . $policy->policy_number,
+                                'type' => 'transport_receipt',
+                            ]);
+                        }
+                    }
+                }
             }
-        }
 
-        return response()->json([
-            'message' => 'Policy updated successfully',
-            'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers', 'user'])
-        ]);
+            // Update policy data
+            $policyData = $request->only([
+                'ship_order_data_id',
+                'operating_order_id',
+                'covenant_amount',
+                'policy_type',
+                'policy_aging_date',
+                'policy_loading_date'
+            ]);
+            $policy->update($policyData);
+
+            // Update vehicle driver assignments if provided
+            if (isset($validated['vehicle_driver_assignments'])) {
+                $policy->vehicleDriverAssignments()->delete();
+
+                foreach ($validated['vehicle_driver_assignments'] as $assignmentData) {
+                    $assignment = VehicleDriverAssignment::create([
+                        'vehicle_id' => $assignmentData['vehicle_id'],
+                        'driver_id' => $assignmentData['driver_id'],
+                        'policy_id' => $policy->id,
+                    ]);
+
+                    $assignment->syncShipContainers($assignmentData['ship_container_ids']);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Policy updated successfully',
+                'policy' => $policy->load(['shipOrderData', 'operatingOrder', 'vehicleDriverAssignments.vehicle', 'vehicleDriverAssignments.driver', 'vehicleDriverAssignments.shipContainers', 'user'])
+            ]);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Policy not found'
+            ], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to update policy',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(string $id)
