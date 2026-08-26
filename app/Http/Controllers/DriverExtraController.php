@@ -152,27 +152,102 @@ class DriverExtraController extends Controller
         ]);
 
         $user = auth()->user();
-        // Scope to records the current user is authorized to settle.
-        // Adjust the scope (e.g. by driver_id, company_id) to match your auth model.
-        $query = Policy::whereIn('id', $validatedData['clear_ids'])
-            ->where('settled', false); // Avoid redundant updates on already-settled rows
 
-        // Optional: verify all submitted IDs were actually found & eligible
-        $matchedCount = $query->count();
-        if ($matchedCount !== count($validatedData['clear_ids'])) {
+        try {
+            DB::beginTransaction();
+
+            $policies = Policy::whereIn('id', $validatedData['clear_ids'])
+                ->where('settled', false)
+                ->with([
+                    'shipOrderData.treasuries',
+                    'vehicleDriverAssignments.driverExtras',
+                ])
+                ->lockForUpdate()
+                ->get();
+
+            if ($policies->count() !== count($validatedData['clear_ids'])) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'One or more policies are already settled or not accessible.',
+                ], 422);
+            }
+
+            foreach ($policies as $policy) {
+                $shipOrder = $policy->shipOrderData;
+                $treasury = $shipOrder?->treasuries()->lockForUpdate()->first();
+
+                if (!$treasury) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'لم يتم تعيين خزينة لطلب الشحن الخاص بالوثيقة رقم #' . $policy->policy_number,
+                    ], 422);
+                }
+
+                // Calculate driver extras for this policy
+                $driverExtrasSum = 0;
+                $assignments = $policy->vehicleDriverAssignments;
+                $assignmentsList = $assignments instanceof \Illuminate\Support\Collection
+                    ? $assignments
+                    : ($assignments instanceof \App\Models\VehicleDriverAssignment ? collect([$assignments]) : collect());
+
+                foreach ($assignmentsList as $assignment) {
+                    if ($assignment->driverExtras) {
+                        foreach ($assignment->driverExtras as $extra) {
+                            $driverExtrasSum += ($extra->extra_amount ?? 0);
+                        }
+                    }
+                }
+
+                $noloans = $shipOrder->noloans ?? 0;
+                $covenantAmount = $policy->covenant_amount ?? 0;
+                $netAmount = ($noloans - $covenantAmount) + $driverExtrasSum;
+
+                if ($netAmount > 0) {
+                    if ($treasury->balance < $netAmount) {
+                        DB::rollBack();
+                        return response()->json([
+                            'message' => 'الرصيد غير كافٍ في الخزينة (' . $treasury->name . ') لتسوية الوثيقة رقم #' . $policy->policy_number,
+                        ], 400);
+                    }
+
+                    $treasury->balance -= $netAmount;
+                    $treasury->save();
+
+                    $treasury->deductions()->create([
+                        'user_id' => $user->id,
+                        'amount' => $netAmount,
+                        'reason' => 'تصفية وثيقة رقم #' . $policy->policy_number,
+                        'type' => 'transport_receipt',
+                    ]);
+                } elseif ($netAmount < 0) {
+                    $refundAmount = abs($netAmount);
+                    $treasury->balance += $refundAmount;
+                    $treasury->save();
+
+                    $treasury->deductions()->create([
+                        'user_id' => $user->id,
+                        'amount' => $refundAmount,
+                        'reason' => 'استرداد متبقي عهدة بعد تصفية وثيقة رقم #' . $policy->policy_number,
+                        'type' => 'refund',
+                    ]);
+                }
+
+                $policy->update([
+                    'settled' => true,
+                    'clearance_date' => now(),
+                    'settled_user' => $user->id,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json(['message' => 'Policies settled successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
-                'message' => 'One or more policies are already settled or not accessible.',
-            ], 422);
+                'error' => 'Failed to settle policies',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        DB::transaction(function () use ($query, $user) {
-            $query->update([
-                'settled' => true,
-                'clearance_date' => now(),
-                'settled_user' => $user->id
-            ]);
-        });
-
-        return response()->json(['message' => 'Policies settled successfully'], 200);
     }
 }
