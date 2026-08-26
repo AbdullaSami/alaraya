@@ -201,6 +201,10 @@ class ReportsController extends Controller
                             ($receipt->sina_marine_receipts ?? 0) +
                             ($receipt->tunnel_ferry_receipts ?? 0) +
                             ($receipt->container_repair_receipt ?? 0) +
+                            ($receipt->x_ray_leave ?? 0) +
+                            ($receipt->allocation ?? 0) +
+                            ($receipt->guarantee ?? 0) +
+                            ($receipt->form ?? 0) +
                             ($receipt->port_receipts ?? 0);
                     }
                 }
@@ -297,6 +301,10 @@ class ReportsController extends Controller
                                 'sina_marine_receipts' => $transportReceipt->sina_marine_receipts,
                                 'tunnel_ferry_receipts' => $transportReceipt->tunnel_ferry_receipts,
                                 'container_repair_receipt' => $transportReceipt->container_repair_receipt,
+                                'x_ray_leave' => $transportReceipt->x_ray_leave,
+                                'allocation' => $transportReceipt->allocation,
+                                'guarantee' => $transportReceipt->guarantee,
+                                'form' => $transportReceipt->form,
                                 'port_receipts' => $transportReceipt->port_receipts,
                             ]
                         ];
