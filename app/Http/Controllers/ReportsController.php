@@ -439,16 +439,22 @@ class ReportsController extends Controller
                 $noloans = $shipOrder->noloans ?? 0;
 
                 foreach ($shipOrder->policies as $policy) {
-                    $covenantAmountSum += ($policy->covenant_amount ?? 0);
+                    $policyDriverExtrasSum = 0;
+                    $policyCovenantAmount = ($policy->covenant_amount ?? 0);
+                    $covenantAmountSum += $policyCovenantAmount;
 
                     $assignments = $this->safeAssignments($policy);
                     foreach ($assignments as $assignment) {
                         if ($assignment->driverExtras) {
                             foreach ($assignment->driverExtras as $extra) {
-                                $driverExtrasSum += ($extra->extra_amount ?? 0);
+                                $extraAmount = ($extra->extra_amount ?? 0);
+                                $driverExtrasSum += $extraAmount;
+                                $policyDriverExtrasSum += $extraAmount;
                             }
                         }
                     }
+
+                    $policy->net_amount = ($noloans - $policyCovenantAmount) + $policyDriverExtrasSum;
                 }
 
                 $shipOrder->driver_extras_total = $driverExtrasSum;
