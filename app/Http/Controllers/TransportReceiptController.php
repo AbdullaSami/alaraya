@@ -68,6 +68,10 @@ class TransportReceiptController extends Controller
                 'tunnel_ferry_receipts' => 'nullable|numeric|min:0',
                 'container_repair_receipt' => 'nullable|numeric|min:0',
                 'port_receipts' => 'nullable|numeric|min:0',
+                'x_ray_leave' => 'nullable|numeric|min:0',
+                'allocation' => 'nullable|numeric|min:0',
+                'guarantee' => 'nullable|numeric|min:0',
+                'form' => 'nullable|numeric|min:0',
             ]);
 
             DB::beginTransaction();
@@ -112,6 +116,10 @@ class TransportReceiptController extends Controller
                 'tunnel_ferry_receipts',
                 'container_repair_receipt',
                 'port_receipts',
+                'x_ray_leave',
+                'allocation',
+                'guarantee',
+                'form'
             ])->sum();
             $transportReceipt = TransportReceipt::create($validated);
 
@@ -231,6 +239,10 @@ class TransportReceiptController extends Controller
                 'tunnel_ferry_receipts' => 'nullable|numeric|min:0',
                 'container_repair_receipt' => 'nullable|numeric|min:0',
                 'port_receipts' => 'nullable|numeric|min:0',
+                'x_ray_leave' => 'nullable|numeric|min:0',
+                'allocation' => 'nullable|numeric|min:0',
+                'guarantee' => 'nullable|numeric|min:0',
+                'form' => 'nullable|numeric|min:0',
             ]);
 
             $expenseFields = [
@@ -262,6 +274,10 @@ class TransportReceiptController extends Controller
                 'tunnel_ferry_receipts',
                 'container_repair_receipt',
                 'port_receipts',
+                'x_ray_leave',
+                'allocation',
+                'guarantee',
+                'form'
             ];
 
             // Old total from the record as it currently stands

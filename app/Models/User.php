@@ -49,7 +49,15 @@ class User extends Authenticatable
         return $this->belongsToMany(Treasury::class, 'treasury_user');
     }
 
-    
+    public function policies()
+    {
+        return $this->hasMany(Policy::class, 'user_id');
+    }
+    public function settled_policies()
+    {
+        return $this->hasMany(Policy::class, 'settled_user');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

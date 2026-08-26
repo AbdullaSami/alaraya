@@ -151,6 +151,7 @@ class DriverExtraController extends Controller
             'clear_ids.*' => 'integer|exists:policies,id',
         ]);
 
+        $user = auth()->user();
         // Scope to records the current user is authorized to settle.
         // Adjust the scope (e.g. by driver_id, company_id) to match your auth model.
         $query = Policy::whereIn('id', $validatedData['clear_ids'])
@@ -164,10 +165,11 @@ class DriverExtraController extends Controller
             ], 422);
         }
 
-        DB::transaction(function () use ($query) {
+        DB::transaction(function () use ($query, $user) {
             $query->update([
                 'settled' => true,
-                'clearance_date' => now()
+                'clearance_date' => now(),
+                'settled_user' => $user->id
             ]);
         });
 

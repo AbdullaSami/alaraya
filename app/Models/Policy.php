@@ -23,6 +23,7 @@ class Policy extends Model
         'policy_loading_date',
         'settled',
         'clearance_date',
+        'settled_user'
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -48,6 +49,10 @@ class Policy extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function settled_user()
+    {
+        return $this->belongsTo(User::class, 'settled_user');
     }
     public function transportReceipts()
     {

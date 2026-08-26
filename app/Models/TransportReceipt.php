@@ -43,6 +43,10 @@ class TransportReceipt extends Model
         'tunnel_ferry_receipts',
         'container_repair_receipt',
         'port_receipts',
+        'x_ray_leave',
+        'allocation',
+        'guarantee',
+        'form',
     ];
 
     public function getActivitylogOptions(): LogOptions
