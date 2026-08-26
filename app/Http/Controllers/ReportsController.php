@@ -365,7 +365,6 @@ class ReportsController extends Controller
         }
     }
 
-
     public function vehicleStatement(Request $request)
     {
         try {
@@ -408,6 +407,7 @@ class ReportsController extends Controller
 
                     $query->with([
                         'user',
+                        'settled_user',
                         'transportReceipts',
                         'vehicleDriverAssignments',
                         'vehicleDriverAssignments.vehicle',
