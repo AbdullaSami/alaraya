@@ -149,6 +149,7 @@ class DriverExtraController extends Controller
         $validatedData = $request->validate([
             'clear_ids'   => 'required|array|min:1',
             'clear_ids.*' => 'integer|exists:policies,id',
+            'treasury_id' => 'required|integer|exists:treasuries,id',
         ]);
 
         $user = auth()->user();
@@ -156,10 +157,20 @@ class DriverExtraController extends Controller
         try {
             DB::beginTransaction();
 
+            // Lock the chosen treasury once — it's the same for every policy in this batch
+            $treasury = Treasury::lockForUpdate()->find($validatedData['treasury_id']);
+
+            if (!$treasury) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'الخزينة المحددة غير موجودة.',
+                ], 422);
+            }
+
             $policies = Policy::whereIn('id', $validatedData['clear_ids'])
                 ->where('settled', false)
                 ->with([
-                    'shipOrderData.treasuries',
+                    'shipOrderData',
                     'vehicleDriverAssignments.driverExtras',
                 ])
                 ->lockForUpdate()
@@ -174,12 +185,11 @@ class DriverExtraController extends Controller
 
             foreach ($policies as $policy) {
                 $shipOrder = $policy->shipOrderData;
-                $treasury = $shipOrder?->treasuries()->lockForUpdate()->first();
 
-                if (!$treasury) {
+                if (!$shipOrder) {
                     DB::rollBack();
                     return response()->json([
-                        'message' => 'لم يتم تعيين خزينة لطلب الشحن الخاص بالوثيقة رقم #' . $policy->policy_number,
+                        'message' => 'لم يتم العثور على طلب الشحن الخاص بالوثيقة رقم #' . $policy->policy_number,
                     ], 422);
                 }
 
@@ -211,7 +221,6 @@ class DriverExtraController extends Controller
                     }
 
                     $treasury->balance -= $netAmount;
-                    $treasury->save();
 
                     $treasury->deductions()->create([
                         'user_id' => $user->id,
@@ -222,7 +231,6 @@ class DriverExtraController extends Controller
                 } elseif ($netAmount < 0) {
                     $refundAmount = abs($netAmount);
                     $treasury->balance += $refundAmount;
-                    $treasury->save();
 
                     $treasury->deductions()->create([
                         'user_id' => $user->id,
@@ -238,6 +246,9 @@ class DriverExtraController extends Controller
                     'settled_user' => $user->id,
                 ]);
             }
+
+            // Save the treasury balance once, after all policies in the batch are applied
+            $treasury->save();
 
             DB::commit();
 
