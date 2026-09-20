@@ -23,37 +23,48 @@ class ShipOrderDataController extends Controller
     {
         $user = auth()->user();
 
-        $query = ShipOrderData::query();
-        if ($user->can('view_any ship_order_data') || $user->hasRole('admin')) {
+        $query = ShipOrderData::query()->with([
+            'shipLineClients.client',
+            'shipLineClients.shippingLine',
+            'shipLineClients.destination',
+            'shipLineClients.shipLineClientFactories.factory',
+            'shipPolicies.shipContainersDetails',
+            'shipBookings.shipContainersDetails',
+            'shipBookings.clearanceData',
+            'shipContactData',
+            'treasuries'
+        ]);
 
-            $shipOrders = $query->with([
-                'shipLineClients.client',
-                'shipLineClients.shippingLine',
-                'shipLineClients.destination',
-                'shipLineClients.shipLineClientFactories.factory',
-                'shipPolicies.shipContainersDetails',
-                'shipBookings.shipContainersDetails',
-                'shipBookings.clearanceData',
-                'shipContactData',
-                'treasuries'
-            ])
-                ->latest()
-                ->paginate($request->get('per_page', 15));
-        } else {
-            $shipOrders = $query->whereHas('treasuries', function ($q) use ($user) {
+        if (!($user->can('view_any ship_order_data') || $user->hasRole('admin'))) {
+            $query->whereHas('treasuries', function ($q) use ($user) {
                 $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
-            })->with([
-                'shipLineClients.client',
-                'shipLineClients.shippingLine',
-                'shipLineClients.destination',
-                'shipLineClients.shipLineClientFactories.factory',
-                'shipPolicies.shipContainersDetails',
-                'shipBookings.shipContainersDetails',
-                'shipBookings.clearanceData',
-                'shipContactData',
-                'treasuries'
-            ])->latest()->paginate($request->get('per_page', 15));
+            });
         }
+
+        if ($request->filled('search')) {
+            $search = trim($request->query('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('shipLineClients.client', function ($q) use ($search) {
+                        $q->where('client_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('shipLineClients.shippingLine', function ($q) use ($search) {
+                        $q->where('shipping_line_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('shipLineClients.destination', function ($q) use ($search) {
+                        $q->where('destination_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('shipPolicies', function ($q) use ($search) {
+                        $q->where('policy_number', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('shipBookings', function ($q) use ($search) {
+                        $q->where('booking_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $shipOrders = $query->latest()->paginate($request->get('per_page', 15));
 
         return response()->json([
             'data' => $shipOrders

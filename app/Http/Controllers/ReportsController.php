@@ -376,6 +376,7 @@ class ReportsController extends Controller
             $fromDate = $request->filled('from_date') ? $request->input('from_date') : null;
             $toDate = $request->filled('to_date') ? $request->input('to_date') : null;
             $vehicleNumber = $request->filled('vehicle_number') ? $request->input('vehicle_number') : null;
+            $search = $request->filled('search') ? trim($request->query('search')) : null;
 
             // Pick which date column to range on: if the caller told us cleared/not-cleared,
             // use the column that makes sense for that state. Otherwise default to created_at.
@@ -427,13 +428,55 @@ class ReportsController extends Controller
                 $query->whereHas('policies', $applyFilters);
             }
 
-            $vehicles = $query->get();
+            if ($search !== null && $search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('ship_order_data.id', 'like', "%{$search}%")
+                        ->orWhere('order_number', 'like', "%{$search}%")
+                        ->orWhereHas('shipLineClients.client', function ($q) use ($search) {
+                            $q->where('client_name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('policies', function ($q) use ($search) {
+                            $q->where('policy_number', 'like', "%{$search}%")
+                                ->orWhereHas('vehicleDriverAssignments.driver', function ($q) use ($search) {
+                                    $q->where('driver_name', 'like', "%{$search}%");
+                                })
+                                ->orWhereHas('vehicleDriverAssignments.vehicle', function ($q) use ($search) {
+                                    $q->where('vehicle_number', 'like', "%{$search}%");
+                                });
+                        });
+                });
+            }
 
             $totalNoloanSum = 0;
             $totalCovenantAmountSum = 0;
             $totalDriverExtrasSum = 0;
 
-            $vehiclesWithExtras = $vehicles->map(function ($shipOrder) use (&$totalNoloanSum, &$totalCovenantAmountSum, &$totalDriverExtrasSum) {
+            // Preserve report totals across all matching orders while loading them in bounded batches.
+            $totalsQuery = clone $query;
+            $totalsQuery->setEagerLoads([
+                'policies' => function ($query) use ($applyFilters) {
+                    $applyFilters($query);
+                    $query->with('vehicleDriverAssignments.driverExtras');
+                },
+            ]);
+            $totalsQuery->chunkById(100, function ($shipOrders) use (&$totalNoloanSum, &$totalCovenantAmountSum, &$totalDriverExtrasSum) {
+                foreach ($shipOrders as $shipOrder) {
+                    $totalNoloanSum += $shipOrder->noloans ?? 0;
+                    foreach ($shipOrder->policies as $policy) {
+                        $totalCovenantAmountSum += $policy->covenant_amount ?? 0;
+                        foreach ($this->safeAssignments($policy) as $assignment) {
+                            foreach ($assignment->driverExtras ?? [] as $extra) {
+                                $totalDriverExtrasSum += $extra->extra_amount ?? 0;
+                            }
+                        }
+                    }
+                }
+            }, 'ship_order_data.id', 'id');
+
+            $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
+            $page = $query->orderBy('ship_order_data.id')->paginate($perPage);
+
+            $vehiclesWithExtras = $page->getCollection()->map(function ($shipOrder) {
                 $driverExtrasSum = 0;
                 $covenantAmountSum = 0;
                 $noloans = $shipOrder->noloans ?? 0;
@@ -461,10 +504,6 @@ class ReportsController extends Controller
                 $shipOrder->covenant_amount_total = $covenantAmountSum;
                 $shipOrder->noloans = $noloans;
 
-                $totalNoloanSum += $noloans;
-                $totalCovenantAmountSum += $covenantAmountSum;
-                $totalDriverExtrasSum += $driverExtrasSum;
-
                 return $shipOrder;
             });
 
@@ -479,7 +518,11 @@ class ReportsController extends Controller
                     'total_driver_extras' => $totalDriverExtrasSum,
                     'net_amount' => $netAmount
                 ]
-            ], 200);
+            ], 200)
+                ->header('X-Current-Page', $page->currentPage())
+                ->header('X-Last-Page', $page->lastPage())
+                ->header('X-Per-Page', $page->perPage())
+                ->header('X-Total-Count', $page->total());
         } catch (\Throwable $th) {
             \Log::error('Vehicle Statement Error:', [
                 'message' => $th->getMessage(),

@@ -35,23 +35,26 @@ class OperatingOrderController extends Controller
                 });
             }
 
-            if ($search = $request->query('search')) {
+            if ($request->filled('search')) {
+                $search = trim($request->query('search'));
                 $query->where(function ($q) use ($search) {
                     $q->where('id', 'like', "%{$search}%")
                         ->orWhereHas('shipOrderData', function ($q) use ($search) {
                             $q->where('order_number', 'like', "%{$search}%");
-                            // add more shipOrderData columns as needed
+                        })
+                        ->orWhereHas('shipOrderData.shipLineClients.client', function ($q) use ($search) {
+                            $q->where('client_name', 'like', "%{$search}%");
                         })
                         ->orWhereHas('drivers.driver', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
+                            $q->where('driver_name', 'like', "%{$search}%");
                         })
                         ->orWhereHas('vehicles.vehicle', function ($q) use ($search) {
-                            $q->where('plate_number', 'like', "%{$search}%");
+                            $q->where('vehicle_number', 'like', "%{$search}%");
                         });
                 });
             }
 
-            $perPage = (int) $request->query('per_page', 15);
+            $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
             $orders = $query->paginate($perPage);
 
             return response()->json($orders);

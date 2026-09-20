@@ -25,7 +25,7 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['X-Current-Page', 'X-Last-Page', 'X-Per-Page', 'X-Total-Count'],
 
     'max_age' => 0,
 

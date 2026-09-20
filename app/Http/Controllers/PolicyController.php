@@ -42,23 +42,31 @@ class PolicyController extends Controller
                 });
             }
 
-            if ($search = $request->query('search')) {
+            if ($request->filled('search')) {
+                $search = trim($request->query('search'));
                 $query->where(function ($q) use ($search) {
                     $q->where('id', 'like', "%{$search}%")
+                        ->orWhere('policy_number', 'like', "%{$search}%")
+                        ->orWhereHas('shipOrderData', function ($q) use ($search) {
+                            $q->where('order_number', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('shipOrderData.shipLineClients.client', function ($q) use ($search) {
+                            $q->where('client_name', 'like', "%{$search}%");
+                        })
                         ->orWhereHas('shipOrderData.shipContactData', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
-                            // add other contact columns as needed
+                            $q->where('contact_loading_name', 'like', "%{$search}%")
+                                ->orWhere('contact_customs_officer_name', 'like', "%{$search}%");
                         })
                         ->orWhereHas('vehicleDriverAssignments.driver', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
+                            $q->where('driver_name', 'like', "%{$search}%");
                         })
                         ->orWhereHas('vehicleDriverAssignments.vehicle', function ($q) use ($search) {
-                            $q->where('plate_number', 'like', "%{$search}%");
+                            $q->where('vehicle_number', 'like', "%{$search}%");
                         });
                 });
             }
 
-            $perPage = min((int) $request->query('per_page', 15), 100);
+            $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
             $policies = $query->paginate($perPage);
 
             return response()->json($policies);
