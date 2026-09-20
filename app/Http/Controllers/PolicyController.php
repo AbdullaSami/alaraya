@@ -12,51 +12,55 @@ use Illuminate\Validation\ValidationException;
 
 class PolicyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Policy::query();
+
         try {
-            if ($user->can('view_any policies') || $user->hasRole('admin')) {
-                $policies = $query->with([
-                    // ship order data and its related data
-                    'shipOrderData',
-                    'shipOrderData.shipLineClients',
-                    'shipOrderData.shipPolicies',
-                    'shipOrderData.shipPolicies.shipContainersDetails',
-                    'shipOrderData.shipBookings',
-                    'shipOrderData.shipBookings.clearanceData',
-                    'shipOrderData.shipBookings.shipContainersDetails',
-                    'shipOrderData.shipContactData',
-                    // operating order and its related data
-                    'operatingOrder',
-                    'vehicleDriverAssignments',
-                    'vehicleDriverAssignments.vehicle',
-                    'vehicleDriverAssignments.driver',
-                    'vehicleDriverAssignments.shipContainers',
-                    'user'
-                ])->get();
-            } else {
-                $policies = $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
+            $query = Policy::query()->with([
+                // ship order data and its related data
+                'shipOrderData',
+                'shipOrderData.shipLineClients',
+                'shipOrderData.shipPolicies',
+                'shipOrderData.shipPolicies.shipContainersDetails',
+                'shipOrderData.shipBookings',
+                'shipOrderData.shipBookings.clearanceData',
+                'shipOrderData.shipBookings.shipContainersDetails',
+                'shipOrderData.shipContactData',
+                // operating order and its related data
+                'operatingOrder',
+                'vehicleDriverAssignments',
+                'vehicleDriverAssignments.vehicle',
+                'vehicleDriverAssignments.driver',
+                'vehicleDriverAssignments.shipContainers',
+                'user',
+            ]);
+
+            if (!($user->can('view_any policies') || $user->hasRole('admin'))) {
+                $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
                     $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
-                })->with([
-                    'shipOrderData',
-                    'shipOrderData.shipLineClients',
-                    'shipOrderData.shipPolicies',
-                    'shipOrderData.shipPolicies.shipContainersDetails',
-                    'shipOrderData.shipBookings',
-                    'shipOrderData.shipBookings.clearanceData',
-                    'shipOrderData.shipBookings.shipContainersDetails',
-                    'shipOrderData.shipContactData',
-                    // operating order and its related data
-                    'operatingOrder',
-                    'vehicleDriverAssignments',
-                    'vehicleDriverAssignments.vehicle',
-                    'vehicleDriverAssignments.driver',
-                    'vehicleDriverAssignments.shipContainers',
-                    'user'
-                ])->get();
+                });
             }
+
+            if ($search = $request->query('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                        ->orWhereHas('shipOrderData.shipContactData', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                            // add other contact columns as needed
+                        })
+                        ->orWhereHas('vehicleDriverAssignments.driver', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('vehicleDriverAssignments.vehicle', function ($q) use ($search) {
+                            $q->where('plate_number', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            $perPage = min((int) $request->query('per_page', 15), 100);
+            $policies = $query->paginate($perPage);
+
             return response()->json($policies);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve policies: ' . $e->getMessage()], 500);

@@ -16,33 +16,43 @@ class OperatingOrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-
         $user = auth()->user();
 
         try {
-            $query = OperatingOrder::query();
+            $query = OperatingOrder::query()->with([
+                'shipOrderData',
+                'shipOrderData.policies',
+                'drivers.driver',
+                'vehicles.vehicle',
+                'torrentContainers.container',
+            ]);
 
-            if ($user->can('view_any operation_orders') || $user->hasRole('admin')) {
-                $orders = $query->with([
-                    'shipOrderData',
-                    'shipOrderData.policies',
-                    'drivers.driver',
-                    'vehicles.vehicle',
-                    'torrentContainers.container',
-                ])->get();
-            } else {
-                $orders = $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
-                    $q->where('treasuries.id', $user->treasuries->pluck('id'));
-                })->with([
-                    'shipOrderData',
-                    'shipOrderData.policies',
-                    'drivers.driver',
-                    'vehicles.vehicle',
-                    'torrentContainers.container',
-                ])->get();
+            if (!($user->can('view_any operation_orders') || $user->hasRole('admin'))) {
+                $query->whereHas('shipOrderData.treasuries', function ($q) use ($user) {
+                    $q->whereIn('treasuries.id', $user->treasuries->pluck('id'));
+                });
             }
+
+            if ($search = $request->query('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                        ->orWhereHas('shipOrderData', function ($q) use ($search) {
+                            $q->where('order_number', 'like', "%{$search}%");
+                            // add more shipOrderData columns as needed
+                        })
+                        ->orWhereHas('drivers.driver', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('vehicles.vehicle', function ($q) use ($search) {
+                            $q->where('plate_number', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            $perPage = (int) $request->query('per_page', 15);
+            $orders = $query->paginate($perPage);
 
             return response()->json($orders);
         } catch (\Exception $e) {
@@ -342,7 +352,7 @@ class OperatingOrderController extends Controller
         $user = auth()->user();
         try {
 
-        if (!$user->hasRole('admin')) {
+            if (!$user->hasRole('admin')) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
             $order = OperatingOrder::findOrFail($operating_order);
