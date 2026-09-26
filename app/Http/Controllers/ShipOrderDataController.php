@@ -32,7 +32,8 @@ class ShipOrderDataController extends Controller
             'shipBookings.shipContainersDetails',
             'shipBookings.clearanceData',
             'shipContactData',
-            'treasuries'
+            'treasuries',
+            'operatingOrder'
         ]);
 
         if (!($user->can('view_any ship_order_data') || $user->hasRole('admin'))) {
