@@ -67,7 +67,10 @@ class PolicyController extends Controller
             }
 
             $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
-            $policies = $query->paginate($perPage);
+            $policies = $query
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->paginate($perPage);
 
             return response()->json($policies);
         } catch (\Exception $e) {

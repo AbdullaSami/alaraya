@@ -55,7 +55,10 @@ class OperatingOrderController extends Controller
             }
 
             $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
-            $orders = $query->paginate($perPage);
+            $orders = $query
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->paginate($perPage);
 
             return response()->json($orders);
         } catch (\Exception $e) {
