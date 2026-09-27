@@ -132,6 +132,8 @@ class PolicyController extends Controller
 
                 if ($covenantAmount > 0) {
                     if ($treasury->balance < $covenantAmount) {
+                        DB::rollBack();
+
                         return response()->json([
                             'message' => 'الرصيد غير كافٍ في الخزينة'
                         ], 400);

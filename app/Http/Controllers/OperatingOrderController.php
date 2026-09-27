@@ -370,12 +370,10 @@ class OperatingOrderController extends Controller
                 $order->delete();
             });
 
-            DB::commit();
             return response()->json([
                 'message' => 'Operating order deleted successfully'
             ]);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'error' => 'Failed to delete operating order',
                 'message' => $e->getMessage()

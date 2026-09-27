@@ -78,6 +78,8 @@ class TransportReceiptController extends Controller
             if (isset($validated['policy_id'])) {
                 $policy = Policy::find($validated['policy_id']);
                 if ($policy->settled || $policy->transportReceipts != null) {
+                    DB::rollBack();
+
                     return response()->json([
                         'success' => false,
                         'message' => '
@@ -127,6 +129,8 @@ class TransportReceiptController extends Controller
             $treasury = $shipOrder->treasuries()->first();
 
             if (!$treasury) {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
                     'message' => 'لم يتم تعيين خزينة لطلب الشحن'
@@ -134,6 +138,8 @@ class TransportReceiptController extends Controller
             }
 
             if ($treasury->balance < $total) {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
                     'message' => 'الرصيد غير كافٍ في الخزينة'
