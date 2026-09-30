@@ -114,10 +114,16 @@ class ListingSearchPaginationTest extends TestCase
             ->assertHeader('X-Current-Page', '2')
             ->assertHeader('X-Total-Count', '2')
             ->assertHeader('Access-Control-Expose-Headers', 'X-Current-Page, X-Last-Page, X-Per-Page, X-Total-Count')
+            ->assertJsonPath('pagination.current_page', 2)
+            ->assertJsonPath('pagination.last_page', 2)
+            ->assertJsonPath('pagination.per_page', 1)
+            ->assertJsonPath('pagination.total', 2)
+            ->assertJsonPath('pagination.from', 2)
+            ->assertJsonPath('pagination.to', 2)
             ->assertJsonPath('totals.total_noloan', 200)
             ->assertJsonCount(1, 'data');
 
-        $this->assertSame(['success', 'data', 'totals'], array_keys($response->json()));
+        $this->assertSame(['success', 'data', 'pagination', 'totals'], array_keys($response->json()));
 
         $this->getJson('/api/reports/vehicle-statements?search=TRUCK-42')
             ->assertOk()

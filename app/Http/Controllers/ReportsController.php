@@ -512,6 +512,14 @@ class ReportsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $vehiclesWithExtras,
+                'pagination' => [
+                    'current_page' => $page->currentPage(),
+                    'last_page' => $page->lastPage(),
+                    'per_page' => $page->perPage(),
+                    'total' => $page->total(),
+                    'from' => $page->firstItem(),
+                    'to' => $page->lastItem(),
+                ],
                 'totals' => [
                     'total_noloan' => $totalNoloanSum,
                     'total_covenant_amount' => $totalCovenantAmountSum,
