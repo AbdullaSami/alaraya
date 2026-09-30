@@ -422,11 +422,10 @@ class ReportsController extends Controller
                 'shipLineClients.shipLineClientFactories.factory',
             ]);
 
-            // Mirror the same filters on the parent query so ShipOrders with no matching
-            // policies are excluded entirely, not returned with an empty policies array.
-            if (!is_null($isCleared) || ($fromDate && $toDate) || $vehicleNumber) {
-                $query->whereHas('policies', $applyFilters);
-            }
+            // A vehicle statement is policy-based. Always require at least one policy
+            // matching the active filters so unassigned ship orders do not affect the
+            // unfiltered report while disappearing from both clearance states.
+            $query->whereHas('policies', $applyFilters);
 
             if ($search !== null && $search !== '') {
                 $query->where(function ($q) use ($search) {
@@ -461,8 +460,12 @@ class ReportsController extends Controller
             ]);
             $totalsQuery->chunkById(100, function ($shipOrders) use (&$totalNoloanSum, &$totalCovenantAmountSum, &$totalDriverExtrasSum) {
                 foreach ($shipOrders as $shipOrder) {
-                    $totalNoloanSum += $shipOrder->noloans ?? 0;
                     foreach ($shipOrder->policies as $policy) {
+                        // Settlement applies the ship-order noloan amount to each policy,
+                        // so aggregate it at the same level as covenant and driver extras.
+                        // This also makes cleared + uncleared totals reconcile with "all"
+                        // when an order contains policies in both states.
+                        $totalNoloanSum += $shipOrder->noloans ?? 0;
                         $totalCovenantAmountSum += $policy->covenant_amount ?? 0;
                         foreach ($this->safeAssignments($policy) as $assignment) {
                             foreach ($assignment->driverExtras ?? [] as $extra) {
